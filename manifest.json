@@ -1,0 +1,28 @@
+{
+    "manifest_version": 2,
+    "name": "SpeedReading",
+    "version": "1.0",
+	   
+    "browser_action": {
+        "default_title": "SpeedReading",
+        "default_icon": "128x128.png",
+        "default_popup": "index.html"
+    },
+
+    "permissions":[
+      "tabs"
+    ],
+
+    "background": {
+    "scripts": ["js/jquery.js", "js/bootstrap.js", "background.js"],
+    "css": ["mycss.css", "css/bootstrap.css", "css/bootstrap-theme.css"]
+  },
+
+    "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["myscript.js"]
+    }
+  ]
+
+}
