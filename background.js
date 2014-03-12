@@ -215,6 +215,12 @@
 		},
 		"stopAnimation" : function (){
 			clearTimeout(animator.fields.animation);
+			animator.fields.iterator = 0;
+			ui.clearTextContainer();
+			ui.updateProgressBar(0);
+		},
+		"pauseAnimation" : function(){
+			clearTimeout(animator.fields.animation);
 		},
 		"clalculateDelay": function(punctuation_delay){
 			var delay = this.fields.delay;
@@ -229,10 +235,6 @@
 			function animate(){
 				if (animator.fields.iterator == convertedText.length){
 					animator.stopAnimation();
-					animator.fields.iterator = 0;
-					ui.clearTextContainer();
-					ui.updateProgressBar(0);
-
 				}else{
 					c = convertedText[animator.fields.iterator];	
 					highLightFramePosition = ui.getSmallbBarLength();
@@ -242,8 +244,7 @@
 					ui.showTextContainer();
 					ui.updateProgressBar(animator.fields.iterator);
 					animator.fields.iterator++;
-					var delay = animator.clalculateDelay(c.punctuation_delay);
-					animator.fields.animation = setTimeout(animate, delay);
+					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(c.punctuation_delay););
 				}
 			}		
 		}
@@ -257,14 +258,14 @@
 			
 		},
 		"pauseButtonEvent" : function(){
-			animator.stopAnimation();	
+			animator.pauseAnimation();	
 			ui.transformAnimateButtonStateToStart();
 			ui.setStartButtonEvent(ui_events.startButtonEvent);		
 		},
 		"speedButtonEvent" : function(e){
 			ui.deactivateActiveButton();
 			ui.switchSpeedButtonStateToActive(e.target);
-			animator.stopAnimation();
+			animator.pauseAnimation();
 			animator.setAnimationSpeed(e.target.value);
 			animator.startAnimation(system.fields.text);
 			if (ui.getStartButton() != null)
