@@ -19,13 +19,13 @@
 			return document.getElementById("pause");
 		},
 		"getHighlightedLetterLeftOffset" : function(){
-			return document.getElementsByClassName('highlight')[0].offsetLeft
+			return document.getElementsByClassName('highlight')[0].offsetLeft;
 		},
 		"getHighlightedLetterWidth" : function(){
-			return document.getElementsByClassName('highlight')[0].offsetWidth
+			return document.getElementsByClassName('highlight')[0].offsetWidth;
 		},
 		"getSelectedSpeedButton" : function(){
-			return document.getElementsByClassName('active')[0]
+			return document.getElementsByClassName('active')[0];
 		},
 		"setStartButtonEvent" : function(fn){
 			this.getStartButton().onclick = fn;
@@ -76,7 +76,7 @@
 			active_button.className = classes[0]+" "+classes[1];
 		},
 		"updateProgressBar" : function(iterator){
-			if (iterator != 0){
+			if (iterator !== 0){
 				var step = 100/convertedText.length;
 				ui.setProgressBarPercentage((iterator+1) * step);
 			}
@@ -84,7 +84,7 @@
 				ui.setProgressBarPercentage(0);			
 			}
 		}
-	}
+	};
 
 	
 
@@ -115,16 +115,13 @@
 				}
 			);
 		}
-	}
+	};
 
 
 	text_processor = {
 		"fields" : {
-			"end_symbols" : [",","—","!","?",")",";",":","'",'"',"."],
-			"start_symbols" : ["(","'",'"']
-		},
-		"wordSuitableForHighlight" : function (word){
-			return word == "‒"||"—"||"—";
+			"end_symbols" : [",","‒","—","!","?",")",";",":","'",'"',"."],
+			"start_symbols" : ["(","'",'"',"‒","—"]
 		},
 		"allignTextToHighLightFramePositionSnag" : function(){
 			var position = highLightFramePosition - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
@@ -161,10 +158,10 @@
 			return convertedText;
 
 			function wordHasPunctuationSymbol(word){
-				var word = word.split("");
+				word = word.split("");
 				var startSymbIndex = text_processor.fields.start_symbols.indexOf(word[0]);
 				var endSymbIndex = text_processor.fields.end_symbols.indexOf(word[word.length-1]);
-				return startSymbIndex+endSymbIndex >= -1
+				return startSymbIndex+endSymbIndex >= -1;
 			}
 
 			function calculateLetterPositionToHighLight (word){
@@ -173,7 +170,7 @@
 				highlightedWordElement = text_processor.generateHighlightedWordElement(0, word);
 				ui.getTextContainer().innerHTML = highlightedWordElement;	
 				
-				textContainerWidth = ui.getTextContainer().offsetWidth
+				textContainerWidth = ui.getTextContainer().offsetWidth;
 				AverageCharacterWidth = textContainerWidth/charactersQuantity;
 				ORP_Offset = (textContainerWidth*0.265)+(0.5*AverageCharacterWidth);
 				positionToHighLight = (ORP_Offset/AverageCharacterWidth);
@@ -190,11 +187,11 @@
 					cssClass = "highlight";
 				}
 				var label = "<label class='"+cssClass+"'>"+string[i]+"</label>";
-				processedWord = processedWord + label
-			};
+				processedWord = processedWord + label;
+			}
 			return processedWord;
 		}
-	}
+	};
 
 	animator = {
 		"fields" : {
@@ -202,7 +199,7 @@
 			"iterator" : 0,
 			"animation" : null,
 			"speed_delay_map" : {
- 				"250" : 150,
+				"250" : 150,
 				"300" : 120,
 				"350" : 110,
 				"400" : 100,
@@ -222,9 +219,9 @@
 		"pauseAnimation" : function(){
 			clearTimeout(animator.fields.animation);
 		},
-		"clalculateDelay": function(punctuation_delay){
+		"clalculateDelay": function(punctuation_delay, word_length){
 			var delay = this.fields.delay;
-			if (punctuation_delay){
+			if (punctuation_delay || word_length > 12){
 				delay = delay + this.fields.speed_delay_map[ui.getSelectedSpeedButton().value];
 			}
 			return delay;
@@ -235,20 +232,22 @@
 			function animate(){
 				if (animator.fields.iterator == convertedText.length){
 					animator.stopAnimation();
+					ui.transformAnimateButtonStateToStart();
+					ui.setStartButtonEvent(ui_events.startButtonEvent);
+
 				}else{
 					c = convertedText[animator.fields.iterator];	
 					highLightFramePosition = ui.getSmallbBarLength();
 					ui.getTextContainer().innerHTML = text_processor.generateHighlightedWordElement(c.letterToHighlight, c.word);
-					if (text_processor.wordSuitableForHighlight(c.word))
-						text_processor.allignTextToHighLightFramePositionSnag();
+					text_processor.allignTextToHighLightFramePositionSnag();
 					ui.showTextContainer();
 					ui.updateProgressBar(animator.fields.iterator);
 					animator.fields.iterator++;
-					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(c.punctuation_delay););
+					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(c.punctuation_delay, c.word.length));
 				}
 			}		
 		}
-	}
+	};
 
 	ui_events = {
 		"startButtonEvent" : function(){
@@ -268,11 +267,11 @@
 			animator.pauseAnimation();
 			animator.setAnimationSpeed(e.target.value);
 			animator.startAnimation(system.fields.text);
-			if (ui.getStartButton() != null)
+			if (ui.getStartButton() !== null)
 				ui.transformAnimateButtonStateToPause();
 				ui.setPauseButtonEvent(ui_events.pauseButtonEvent);
 		}
-	}
+	};
 
 	system.getUserSelectedText(
 		function(selected_text){
