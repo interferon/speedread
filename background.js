@@ -1,5 +1,4 @@
-	var ui, system,
-		animator, text_processor;
+	var ui, system, animator, text_processor;
 
 	ui = {
 
@@ -233,7 +232,7 @@
 				if (animator.fields.iterator == convertedText.length){
 					animator.stopAnimation();
 					ui.transformAnimateButtonStateToStart();
-					ui.setStartButtonEvent(ui_events.startButtonEvent);
+					ui.setStartButtonEvent(controller.start);
 
 				}else{
 					c = convertedText[animator.fields.iterator];	
@@ -249,19 +248,18 @@
 		}
 	};
 
-	ui_events = {
-		"startButtonEvent" : function(){
+	controller = {
+		"start" : function(){
 			animator.startAnimation(system.fields.text);
 			ui.transformAnimateButtonStateToPause();
-			ui.setPauseButtonEvent(ui_events.pauseButtonEvent);
-			
+			ui.setPauseButtonEvent(controller.pause);
 		},
-		"pauseButtonEvent" : function(){
+		"pause" : function(){
 			animator.pauseAnimation();	
 			ui.transformAnimateButtonStateToStart();
-			ui.setStartButtonEvent(ui_events.startButtonEvent);		
+			ui.setStartButtonEvent(controller.start);		
 		},
-		"speedButtonEvent" : function(e){
+		"setSpeed" : function(e){
 			ui.deactivateActiveButton();
 			ui.switchSpeedButtonStateToActive(e.target);
 			animator.pauseAnimation();
@@ -269,15 +267,15 @@
 			animator.startAnimation(system.fields.text);
 			if (ui.getStartButton() !== null)
 				ui.transformAnimateButtonStateToPause();
-				ui.setPauseButtonEvent(ui_events.pauseButtonEvent);
+				ui.setPauseButtonEvent(controller.pause);
 		}
 	};
 
 	system.getUserSelectedText(
 		function(selected_text){
 			system.fields.text = selected_text.trim().split(" ");
-			ui.setStartButtonEvent(ui_events.startButtonEvent);
-			ui.setSpeedButtonsEvent(ui_events.speedButtonEvent);
+			ui.setStartButtonEvent(controller.start);
+			ui.setSpeedButtonsEvent(controller.setSpeed);
 			ui.showStartButton();
 		}
 	);
