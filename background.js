@@ -113,6 +113,17 @@
 					);
 				}
 			);
+		},
+		"prepareText" : function (selected_text){
+			var preparedText = [];
+			var text = selected_text.trim().split(/\r\n|\r|\n|\s/g);
+			for (var i = 0; i < text.length; i++) {
+				if (text[i].length > 0){
+					preparedText.push(text[i]);
+				}
+			};
+
+			system.fields.text = preparedText;
 		}
 	};
 
@@ -157,10 +168,7 @@
 			return convertedText;
 
 			function wordHasPunctuationSymbol(word){
-				word = word.split("");
-				var startSymbIndex = text_processor.fields.start_symbols.indexOf(word[0]);
-				var endSymbIndex = text_processor.fields.end_symbols.indexOf(word[word.length-1]);
-				return startSymbIndex+endSymbIndex >= -1;
+				return word.match(/[?\‒\!\,\)\;\:\'\"\.\(\*]/g);
 			}
 
 			function calculateLetterPositionToHighLight (word){
@@ -273,7 +281,7 @@
 
 	system.getUserSelectedText(
 		function(selected_text){
-			system.fields.text = selected_text.trim().split(" ");
+			preparedText = system.prepareText(selected_text);
 			ui.setStartButtonEvent(controller.start);
 			ui.setSpeedButtonsEvent(controller.setSpeed);
 			ui.showStartButton();
