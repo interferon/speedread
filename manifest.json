@@ -5,8 +5,8 @@
 	   
     "browser_action": {
         "default_title": "SpeedReading",
-        "default_icon": "128x128.png",
-        "default_popup": "index.html"
+        "default_icon": "static_content/media/128x128.png",
+        "default_popup": "static_content/view/index.html"
     },
 
     "permissions":[
@@ -14,14 +14,18 @@
     ],
 
     "background": {
-    "scripts": ["js/jquery.js", "js/bootstrap.js", "background.js"],
-    "css": ["mycss.css", "css/bootstrap.css", "css/bootstrap-theme.css"]
+    "scripts": [
+        "static_content/bootstrap/js/jquery.js",
+        "static_content/bootstrap/js/bootstrap.js",
+        "app/background_scripts/background.js"
+    ],
+    "css": ["static_content/styles/mycss.css", "static_content/bootstrap/css/bootstrap.css", "static_content/bootstrap/css/bootstrap-theme.css"]
   },
 
     "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["injected.js"]
+      "js": ["app/content_scripts/injected.js"]
     }
   ]
 

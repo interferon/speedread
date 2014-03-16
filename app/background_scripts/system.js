@@ -1,0 +1,40 @@
+system = {
+	"fields" : {
+		"text" : null,
+		"convertedText" : null
+	},
+	"getUserSelectedText": function (cb){
+		// Chrome API: 
+		chrome.tabs.query(
+			{
+				active: true,
+				currentWindow: true
+			}, 
+			function(tabs){
+				chrome.tabs.sendMessage(
+					tabs[0].id,
+					{
+						method: "getSelectedText"
+					},
+					function(response) {
+						if (response.text.length > 10){
+							cb(response.text);
+						}
+					}
+				);
+			}
+		);
+	},
+	"prepareText" : function (selected_text){
+		var preparedText = [];
+		var text = selected_text.trim().split(/\r\n|\r|\n|\s/g);
+		for (var i = 0; i < text.length; i++) {
+			if (text[i].length > 0){
+				preparedText.push(text[i]);
+			}
+		};
+		system.fields.text = preparedText;
+	}
+};
+
+module.exports = system;
