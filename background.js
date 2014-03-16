@@ -129,10 +129,6 @@
 
 
 	text_processor = {
-		"fields" : {
-			"end_symbols" : [",","‒","—","!","?",")",";",":","'",'"',"."],
-			"start_symbols" : ["(","'",'"',"‒","—"]
-		},
 		"allignTextToHighLightFramePositionSnag" : function(){
 			var position = highLightFramePosition - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
 			ui.setTextContainerLeftPosition(position);
