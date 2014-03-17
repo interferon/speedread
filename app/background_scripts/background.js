@@ -6,7 +6,7 @@ var controller = require('./controller.js');
 
 animator = {
 		"fields" : {
-			"delay" : 150,
+			"delay" : 240,
 			"iterator" : 0,
 			"animation" : null,
 			"speed_delay_map" : {
