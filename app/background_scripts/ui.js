@@ -71,9 +71,9 @@ ui = {
 		var classes = active_button.className.split(" ");
 		active_button.className = classes[0]+" "+classes[1];
 	},
-	"updateProgressBar" : function(iterator){
+	"updateProgressBar" : function(iterator, data_length){
 		if (iterator !== 0){
-			var step = 100/convertedText.length;
+			var step = 100/data_length;
 			ui.setProgressBarPercentage((iterator+1) * step);
 		}
 		else{

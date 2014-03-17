@@ -6,7 +6,7 @@ var controller = require('./controller.js');
 
 animator = {
 		"fields" : {
-			"delay" : 240,
+			"delay" : 150,
 			"iterator" : 0,
 			"animation" : null,
 			"speed_delay_map" : {
@@ -30,15 +30,20 @@ animator = {
 		"pauseAnimation" : function(){
 			clearTimeout(animator.fields.animation);
 		},
-		"clalculateDelay": function(punctuation_delay, word_length){
+		"clalculateDelay": function(has_punctuation, long_word){
 			var delay = this.fields.delay;
-			if (punctuation_delay || word_length > 12){
+			var long_word_delay = 100;
+			if (has_punctuation || long_word){
 				delay = delay + this.fields.speed_delay_map[ui.getSelectedSpeedButton().value];
-			}
+			};
+			if (long_word && has_punctuation) {
+				delay = delay + this.fields.speed_delay_map[ui.getSelectedSpeedButton().value] + long_word_delay;
+			};
+
 			return delay;
 		},
 		"startAnimation" : function(selected_text){
-			convertedText = system.fields.convertedText || text_processor.convertTextForAnimation(selected_text); 
+			var convertedText = system.fields.convertedText || text_processor.convertTextForAnimation(selected_text);
 			animate();
 			function animate(){
 				if (animator.fields.iterator == convertedText.length){
@@ -52,16 +57,14 @@ animator = {
 					ui.getTextContainer().innerHTML = text_processor.generateHighlightedWordElement(c.letterToHighlight, c.word);
 					text_processor.allignTextToHighLightFramePositionSnag();
 					ui.showTextContainer();
-					ui.updateProgressBar(animator.fields.iterator);
+					ui.updateProgressBar(animator.fields.iterator, convertedText.length);
 					animator.fields.iterator++;
-					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(c.punctuation_delay, c.word.length));
+					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(c.punctuation_delay, c.word.length > 12));
 				}
 			}		
 		}
 	};
-
 module.exports = animator;
-
 },{"./controller.js":2,"./system.js":4,"./text_processor.js":5,"./ui.js":6}],2:[function(require,module,exports){
 var animator = require('./animator.js');
 var ui = require('./ui.js');
@@ -134,12 +137,16 @@ system = {
 	},
 	"prepareText" : function (selected_text){
 		var preparedText = [];
-		var text = selected_text.trim().split(/\r\n|\r|\n|\s/g);
-		for (var i = 0; i < text.length; i++) {
-			if (text[i].length > 0){
-				preparedText.push(text[i]);
+		var splitted_text = splitTextIntoSeparateWords(selected_text)
+		for (var i = 0; i < splitted_text.length; i++) {
+			if (splitted_text[i].length > 0){
+				preparedText.push(splitted_text[i]);
 			}
 		};
+
+		function splitTextIntoSeparateWords(text){
+			return text.trim().split(/\r\n|\r|\n|\s/g);
+		}
 		system.fields.text = preparedText;
 	}
 };
@@ -293,9 +300,9 @@ ui = {
 		var classes = active_button.className.split(" ");
 		active_button.className = classes[0]+" "+classes[1];
 	},
-	"updateProgressBar" : function(iterator){
+	"updateProgressBar" : function(iterator, data_length){
 		if (iterator !== 0){
-			var step = 100/convertedText.length;
+			var step = 100/data_length;
 			ui.setProgressBarPercentage((iterator+1) * step);
 		}
 		else{

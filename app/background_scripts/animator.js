@@ -5,7 +5,7 @@ var controller = require('./controller.js');
 
 animator = {
 		"fields" : {
-			"delay" : 240,
+			"delay" : 150,
 			"iterator" : 0,
 			"animation" : null,
 			"speed_delay_map" : {
@@ -29,15 +29,20 @@ animator = {
 		"pauseAnimation" : function(){
 			clearTimeout(animator.fields.animation);
 		},
-		"clalculateDelay": function(punctuation_delay, word_length){
+		"clalculateDelay": function(has_punctuation, long_word){
 			var delay = this.fields.delay;
-			if (punctuation_delay || word_length > 12){
+			var long_word_delay = 100;
+			if (has_punctuation || long_word){
 				delay = delay + this.fields.speed_delay_map[ui.getSelectedSpeedButton().value];
-			}
+			};
+			if (long_word && has_punctuation) {
+				delay = delay + this.fields.speed_delay_map[ui.getSelectedSpeedButton().value] + long_word_delay;
+			};
+
 			return delay;
 		},
 		"startAnimation" : function(selected_text){
-			convertedText = system.fields.convertedText || text_processor.convertTextForAnimation(selected_text); 
+			var convertedText = system.fields.convertedText || text_processor.convertTextForAnimation(selected_text);
 			animate();
 			function animate(){
 				if (animator.fields.iterator == convertedText.length){
@@ -51,12 +56,11 @@ animator = {
 					ui.getTextContainer().innerHTML = text_processor.generateHighlightedWordElement(c.letterToHighlight, c.word);
 					text_processor.allignTextToHighLightFramePositionSnag();
 					ui.showTextContainer();
-					ui.updateProgressBar(animator.fields.iterator);
+					ui.updateProgressBar(animator.fields.iterator, convertedText.length);
 					animator.fields.iterator++;
-					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(c.punctuation_delay, c.word.length));
+					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(c.punctuation_delay, c.word.length > 12));
 				}
 			}		
 		}
 	};
-
 module.exports = animator;

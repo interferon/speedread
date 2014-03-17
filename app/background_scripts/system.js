@@ -27,12 +27,16 @@ system = {
 	},
 	"prepareText" : function (selected_text){
 		var preparedText = [];
-		var text = selected_text.trim().split(/\r\n|\r|\n|\s/g);
-		for (var i = 0; i < text.length; i++) {
-			if (text[i].length > 0){
-				preparedText.push(text[i]);
+		var splitted_text = splitTextIntoSeparateWords(selected_text)
+		for (var i = 0; i < splitted_text.length; i++) {
+			if (splitted_text[i].length > 0){
+				preparedText.push(splitted_text[i]);
 			}
 		};
+
+		function splitTextIntoSeparateWords(text){
+			return text.trim().split(/\r\n|\r|\n|\s/g);
+		}
 		system.fields.text = preparedText;
 	}
 };
