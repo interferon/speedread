@@ -3,10 +3,6 @@ var system = require('./system.js');
 
 
 text_processor = {
-		"allignTextToHighLightFramePositionSnag" : function(){
-			var position = highLightFramePosition - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
-			ui.setTextContainerLeftPosition(position);
-		},
 		"convertTextForAnimation" : function (textToAnimate, delay){
 			var convertedText,
 				letterToHighlight,
@@ -44,7 +40,7 @@ text_processor = {
 			function calculateLetterPositionToHighLight (word){
 				ui.hideTextContainer();
 				charactersQuantity = word.length;
-				highlightedWordElement = text_processor.generateHighlightedWordElement(0, word);
+				highlightedWordElement = text_processor.generateHighlightedWord(0, word);
 				ui.getTextContainer().innerHTML = highlightedWordElement;	
 				
 				textContainerWidth = ui.getTextContainer().offsetWidth;
@@ -56,7 +52,7 @@ text_processor = {
 
 			}					
 		},
-		"generateHighlightedWordElement" : function (highlightPosition, string){	
+		"generateHighlightedWord" : function (highlightPosition, string){	
 			var processedWord = "";	
 			for (var i = 0; i < string.length; i++) {
 				var cssClass = "";

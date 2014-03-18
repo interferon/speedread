@@ -7,7 +7,10 @@ var controller = require('./controller.js');
 animator = {
 		"fields" : {
 			"delay" : 240,
-			"iterator" : 0,
+			"long_word_delay" : 100,
+			"wpm" : null,
+			// +1 for every read word
+			"reading_progress_counter" : 0,
 			"animation" : null,
 			"speed_delay_map" : {
 				"250" : 150,
@@ -18,12 +21,13 @@ animator = {
 				"500" : 90	
 			}
 		},
-		"setAnimationSpeed": function(speed){
-			animator.fields.delay = (60/speed)*1000;
+		"setAnimationSpeed": function(wpm){
+			animator.fields.delay = (60/wpm)*1000;
+			animator.fields.wpm = wpm;
 		},
 		"stopAnimation" : function (){
 			clearTimeout(animator.fields.animation);
-			animator.fields.iterator = 0;
+			animator.fields.reading_progress_counter = 0;
 			ui.clearTextContainer();
 			ui.updateProgressBar(0);
 		},
@@ -32,34 +36,31 @@ animator = {
 		},
 		"clalculateDelay": function(has_punctuation, long_word){
 			var delay = this.fields.delay;
-			var long_word_delay = 100;
 			if (has_punctuation || long_word){
-				delay = delay + this.fields.speed_delay_map[ui.getSelectedSpeedButton().value];
+				delay = delay + this.fields.speed_delay_map[animator.fields.wpm];
 			};
 			if (long_word && has_punctuation) {
-				delay = delay + this.fields.speed_delay_map[ui.getSelectedSpeedButton().value] + long_word_delay;
+				delay = delay + this.fields.speed_delay_map[animator.fields.wpm] + animator.fields.long_word_delay;
 			};
 
 			return delay;
 		},
 		"startAnimation" : function(selected_text){
-			var convertedText = system.fields.convertedText || text_processor.convertTextForAnimation(selected_text);
+			var convertedElements = system.fields.convertedElements || text_processor.convertTextForAnimation(selected_text);
+			ui.fields.progress_length = convertedElements.length;
 			animate();
+
 			function animate(){
-				if (animator.fields.iterator == convertedText.length){
+				if (animator.fields.reading_progress_counter == convertedElements.length){
 					animator.stopAnimation();
 					ui.transformAnimateButtonStateToStart();
 					ui.setStartButtonEvent(controller.start);
-
 				}else{
-					c = convertedText[animator.fields.iterator];	
-					highLightFramePosition = ui.getSmallbBarLength();
-					ui.getTextContainer().innerHTML = text_processor.generateHighlightedWordElement(c.letterToHighlight, c.word);
-					text_processor.allignTextToHighLightFramePositionSnag();
-					ui.showTextContainer();
-					ui.updateProgressBar(animator.fields.iterator, convertedText.length);
-					animator.fields.iterator++;
-					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(c.punctuation_delay, c.word.length > 12));
+					var cE = convertedElements[animator.fields.reading_progress_counter];
+					var generatedWord = text_processor.generateHighlightedWord(cE.letterToHighlight, cE.word)
+					ui.showWord(generatedWord, animator.fields.reading_progress_counter);
+					animator.fields.reading_progress_counter++;
+					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(cE.punctuation_delay, cE.word.length > 12));
 				}
 			}		
 		}
@@ -158,10 +159,6 @@ var system = require('./system.js');
 
 
 text_processor = {
-		"allignTextToHighLightFramePositionSnag" : function(){
-			var position = highLightFramePosition - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
-			ui.setTextContainerLeftPosition(position);
-		},
 		"convertTextForAnimation" : function (textToAnimate, delay){
 			var convertedText,
 				letterToHighlight,
@@ -199,7 +196,7 @@ text_processor = {
 			function calculateLetterPositionToHighLight (word){
 				ui.hideTextContainer();
 				charactersQuantity = word.length;
-				highlightedWordElement = text_processor.generateHighlightedWordElement(0, word);
+				highlightedWordElement = text_processor.generateHighlightedWord(0, word);
 				ui.getTextContainer().innerHTML = highlightedWordElement;	
 				
 				textContainerWidth = ui.getTextContainer().offsetWidth;
@@ -211,7 +208,7 @@ text_processor = {
 
 			}					
 		},
-		"generateHighlightedWordElement" : function (highlightPosition, string){	
+		"generateHighlightedWord" : function (highlightPosition, string){	
 			var processedWord = "";	
 			for (var i = 0; i < string.length; i++) {
 				var cssClass = "";
@@ -228,6 +225,9 @@ text_processor = {
 module.exports = text_processor;
 },{"./system.js":4,"./ui.js":6}],6:[function(require,module,exports){
 ui = {
+	"fields" : {
+		"progress_length" : 0,
+	},
 	"getTextContainer" : function(){
 		return document.getElementById('textContainer');
 	},
@@ -308,6 +308,16 @@ ui = {
 		else{
 			ui.setProgressBarPercentage(0);			
 		}
+	},
+	"showWord" : function(html, progress){
+		ui.getTextContainer().innerHTML = html;
+		ui.indentWord();
+		ui.showTextContainer();
+		ui.updateProgressBar(progress, ui.fields.progress_length);
+	},
+	"indentWord" : function(){
+			var position = ui.getSmallbBarLength() - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
+			ui.setTextContainerLeftPosition(position);
 	}
 };
 

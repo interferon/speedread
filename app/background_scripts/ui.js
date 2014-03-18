@@ -1,4 +1,7 @@
 ui = {
+	"fields" : {
+		"progress_length" : 0,
+	},
 	"getTextContainer" : function(){
 		return document.getElementById('textContainer');
 	},
@@ -79,6 +82,16 @@ ui = {
 		else{
 			ui.setProgressBarPercentage(0);			
 		}
+	},
+	"showWord" : function(html, progress){
+		ui.getTextContainer().innerHTML = html;
+		ui.indentWord();
+		ui.showTextContainer();
+		ui.updateProgressBar(progress, ui.fields.progress_length);
+	},
+	"indentWord" : function(){
+			var position = ui.getSmallbBarLength() - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
+			ui.setTextContainerLeftPosition(position);
 	}
 };
 
