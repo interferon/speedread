@@ -40,7 +40,6 @@ animator = {
 			if (long_word && has_punctuation) {
 				delay = delay + this.fields.speed_delay_map[animator.fields.wpm] + animator.fields.long_word_delay;
 			};
-
 			return delay;
 		},
 		"startAnimation" : function(convertedElements, display){
@@ -97,21 +96,9 @@ controller = {
 			ui.setStartButtonEvent(controller.start);		
 		},
 		"setSpeed" : function(e){
-			animator.pauseAnimation();
 			ui.deactivateActiveButton();
 			ui.switchSpeedButtonStateToActive(e.target);
 			animator.setAnimationSpeed(e.target.value);
-			if (system.fields.convertedElements.length !== 0){
-				animator.startAnimation(
-					system.fields.convertedElements,
-					function(convertedElement, progress){
-						ui.showWord(convertedElement, progress);
-					}
-				);
-			}
-			if (ui.getStartButton() !== null)
-				ui.transformAnimateButtonStateToPause();
-				ui.setPauseButtonEvent(controller.pause);
 		}
 	};
 

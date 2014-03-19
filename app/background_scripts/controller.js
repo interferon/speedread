@@ -28,21 +28,9 @@ controller = {
 			ui.setStartButtonEvent(controller.start);		
 		},
 		"setSpeed" : function(e){
-			animator.pauseAnimation();
 			ui.deactivateActiveButton();
 			ui.switchSpeedButtonStateToActive(e.target);
 			animator.setAnimationSpeed(e.target.value);
-			if (system.fields.convertedElements.length !== 0){
-				animator.startAnimation(
-					system.fields.convertedElements,
-					function(convertedElement, progress){
-						ui.showWord(convertedElement, progress);
-					}
-				);
-			}
-			if (ui.getStartButton() !== null)
-				ui.transformAnimateButtonStateToPause();
-				ui.setPauseButtonEvent(controller.pause);
 		}
 	};
 

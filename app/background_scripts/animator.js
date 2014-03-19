@@ -39,7 +39,6 @@ animator = {
 			if (long_word && has_punctuation) {
 				delay = delay + this.fields.speed_delay_map[animator.fields.wpm] + animator.fields.long_word_delay;
 			};
-
 			return delay;
 		},
 		"startAnimation" : function(convertedElements, display){
