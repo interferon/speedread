@@ -1,9 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var ui = require('./ui.js');
-var system = require('./system.js');
-var text_processor = require('./text_processor.js');
-var controller = require('./controller.js');
-
 animator = {
 		"fields" : {
 			"delay" : 240,
@@ -66,7 +61,7 @@ animator = {
 	};
 
 module.exports = animator;
-},{"./controller.js":2,"./system.js":4,"./text_processor.js":5,"./ui.js":6}],2:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 var animator = require('./animator.js');
 var ui = require('./ui.js');
 var system = require('./system.js');

@@ -1,8 +1,3 @@
-var ui = require('./ui.js');
-var system = require('./system.js');
-var text_processor = require('./text_processor.js');
-var controller = require('./controller.js');
-
 animator = {
 		"fields" : {
 			"delay" : 240,
