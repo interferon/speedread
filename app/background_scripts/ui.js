@@ -33,12 +33,12 @@ ui = {
 		this.getPauseButton().onclick = fn;
 	},
 	"transformAnimateButtonStateToStart" : function (){
-		var button = ui.getPauseButton();
+		var button = this.getPauseButton();
 		button.innerText = "Start!";
 		button.id = "start";
 	},
 	"transformAnimateButtonStateToPause" : function(){
-		var button = ui.getStartButton();
+		var button = this.getStartButton();
 		button.innerText = "Pause";
 		button.id = "pause";
 	},
@@ -60,8 +60,9 @@ ui = {
 	"showStartButton" : function(){
 		this.getStartButton().style.visibility = 'visible';
 	},
-	"switchSpeedButtonStateToActive" : function(speed_button){
-		speed_button.className = speed_button.className + " active";
+	"setSpeedButtonState" : function(speed_button, state){
+		this.deactivateActiveButton();
+		speed_button.className = speed_button.className + " " + state;
 	},
 	"setSpeedButtonsEvent" : function(handler){
 		var nodes = document.getElementsByClassName("btn-group")[0].children;
@@ -77,29 +78,29 @@ ui = {
 	"updateProgressBar" : function(iterator, data_length){
 		if (iterator !== 0){
 			var step = 100/data_length;
-			ui.setProgressBarPercentage((iterator+1) * step);
+			this.setProgressBarPercentage((iterator+1) * step);
 		}
 		else{
-			ui.setProgressBarPercentage(0);			
+			this.setProgressBarPercentage(0);			
 		}
 	},
 	"showWord" : function(element, progress, animation_end_cb){
-		if (progress < ui.fields.progress_length){
-			ui.getTextContainer().innerHTML = ui.generateHighlightedWord(element.letterToHighlight, element.word);
-			ui.indentWord();
-			ui.showTextContainer();
-			ui.updateProgressBar(progress, ui.fields.progress_length);
+		if (progress < this.fields.progress_length){
+			this.getTextContainer().innerHTML = this.generateHighlightedWord(element.letterToHighlight, element.word);
+			this.indentWord();
+			this.showTextContainer();
+			this.updateProgressBar(progress, this.fields.progress_length);
 		}
 		else{
-			ui.clearTextContainer();
-			ui.updateProgressBar(0);
-			ui.transformAnimateButtonStateToStart();
+			this.clearTextContainer();
+			this.updateProgressBar(0);
+			this.transformAnimateButtonStateToStart();
 			animation_end_cb();
 		}
 	},
 	"indentWord" : function(){
-		var position = ui.getSmallbBarLength() - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
-		ui.setTextContainerLeftPosition(position);
+		var position = this.getSmallbBarLength() - (this.getHighlightedLetterLeftOffset()+(this.getHighlightedLetterWidth()/2)-3);
+		this.setTextContainerLeftPosition(position);
 	},
 	"generateHighlightedWord" : function (highlightPosition, string){	
 		var processedWord = "";	

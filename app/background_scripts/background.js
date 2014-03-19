@@ -22,44 +22,48 @@ animator = {
 			}
 		},
 		"setAnimationSpeed": function(wpm){
-			animator.fields.delay = (60/wpm)*1000;
-			animator.fields.wpm = wpm;
+			this.fields.delay = (60/wpm)*1000;
+			this.fields.wpm = wpm;
 		},
 		"stopAnimation" : function (){
-			clearTimeout(animator.fields.animation);
-			animator.fields.reading_progress_counter = 0;
+			clearTimeout(this.fields.animation);
+			this.fields.reading_progress_counter = 0;
 		},
 		"pauseAnimation" : function(){
-			clearTimeout(animator.fields.animation);
+			clearTimeout(this.fields.animation);
 		},
 		"clalculateDelay": function(has_punctuation, long_word){
 			var delay = this.fields.delay;
 			if (has_punctuation || long_word){
-				delay = delay + this.fields.speed_delay_map[animator.fields.wpm];
+				delay = delay + this.fields.speed_delay_map[this.fields.wpm];
 			};
 			if (long_word && has_punctuation) {
-				delay = delay + this.fields.speed_delay_map[animator.fields.wpm] + animator.fields.long_word_delay;
+				delay = delay + this.fields.speed_delay_map[this.fields.wpm] + this.fields.long_word_delay;
 			};
 			return delay;
 		},
 		"startAnimation" : function(convertedElements, display){
-			animate();
-			function animate(){
-				if (animator.fields.reading_progress_counter == convertedElements.length){
-					animator.stopAnimation();
-				}
-				else{
-					var cE = convertedElements[animator.fields.reading_progress_counter];
-					animator.fields.reading_progress_counter++;
-					display(
-						cE,
-						animator.fields.reading_progress_counter
-					);
-					animator.fields.animation = setTimeout(
-						animate,
-						animator.clalculateDelay(cE.punctuation_delay, cE.word.length > 12)
-					);
-				}
+
+			if (this.fields.reading_progress_counter == convertedElements.length){
+				this.stopAnimation();
+			}
+			else{
+				console.log(convertedElements[this.fields.reading_progress_counter].word);
+				var cE = convertedElements[this.fields.reading_progress_counter];
+				this.fields.reading_progress_counter++;
+				display(
+					cE,
+					this.fields.reading_progress_counter
+				);
+					
+				this.fields.animation = setTimeout(
+					animate,
+					animator.clalculateDelay(cE.punctuation_delay, cE.word.length > 12)
+				);
+
+				function animate(){
+					animator.startAnimation(convertedElements, display);
+				}	
 			}		
 		}
 	};
@@ -72,6 +76,12 @@ var system = require('./system.js');
 var text_processor = require('./text_processor.js');
 
 controller = {
+		"init" : function(selected_text){
+			system.fields.text = selected_text;
+			ui.setStartButtonEvent(this.start);
+			ui.setSpeedButtonsEvent(this.setSpeed);
+			ui.showStartButton();
+		},
 		"start" : function(){
 			convertedElements = text_processor.convertText(system.fields.text);
 			system.convertedElements = convertedElements;
@@ -96,8 +106,7 @@ controller = {
 			ui.setStartButtonEvent(controller.start);		
 		},
 		"setSpeed" : function(e){
-			ui.deactivateActiveButton();
-			ui.switchSpeedButtonStateToActive(e.target);
+			ui.setSpeedButtonState(e.target, 'active');
 			animator.setAnimationSpeed(e.target.value);
 		}
 	};
@@ -106,17 +115,14 @@ module.exports = controller;
 },{"./animator.js":1,"./system.js":4,"./text_processor.js":5,"./ui.js":6}],3:[function(require,module,exports){
 var system = require('./system.js');
 var controller = require('./controller.js');
-var ui = require('./ui.js');
 
 system.getUserSelectedText(
 	function(selected_text){
-		preparedText = system.prepareText(selected_text);
-		ui.setStartButtonEvent(controller.start);
-		ui.setSpeedButtonsEvent(controller.setSpeed);
-		ui.showStartButton();
+		system.fields.text = selected_text;
+		controller.init(selected_text);
 	}
 );
-},{"./controller.js":2,"./system.js":4,"./ui.js":6}],4:[function(require,module,exports){
+},{"./controller.js":2,"./system.js":4}],4:[function(require,module,exports){
 system = {
 	"fields" : {
 		"text" : "",
@@ -144,20 +150,6 @@ system = {
 				);
 			}
 		);
-	},
-	"prepareText" : function (selected_text){
-		var preparedText = [];
-		var splitted_text = splitTextIntoSeparateWords(selected_text)
-		for (var i = 0; i < splitted_text.length; i++) {
-			if (splitted_text[i].length > 0){
-				preparedText.push(splitted_text[i]);
-			}
-		};
-
-		function splitTextIntoSeparateWords(text){
-			return text.trim().split(/\r\n|\r|\n|\s/g);
-		}
-		system.fields.text = preparedText;
 	}
 };
 
@@ -167,14 +159,31 @@ text_processor = {
 		"fields" : {
 			"AverageLetterWidth" : 18
 		},
+
+		"prepareText" : function (selected_text){
+			var preparedText = [];
+			var splitted_text = splitTextIntoSeparateWords(selected_text)
+			for (var i = 0; i < splitted_text.length; i++) {
+				if (splitted_text[i].length > 0){
+					preparedText.push(splitted_text[i]);
+				}
+			};
+
+			function splitTextIntoSeparateWords(text){
+				return text.trim().split(/\r\n|\r|\n|\s/g);
+			}
+			return preparedText;
+		},
+
 		"convertText" : function (text){
+			prepared_text = this.prepareText(text);
 			var convertedText,
 				letterToHighlight,
 				delayChangeForPunctuation = false;
 
 			convertedText = [];
-			for (var i = 0; i < text.length; i++){
-				switch(text[i].length){
+			for (var i = 0; i < prepared_text.length; i++){
+				switch(prepared_text[i].length){
 					case 1:
 						letterToHighlight = 1;
 						break;
@@ -182,30 +191,30 @@ text_processor = {
 						letterToHighlight = 2;
 						break;
 					default :
-						letterToHighlight = calculateLetterPositionToHighLight(text[i]);
+						letterToHighlight = this.calculateLetterPositionToHighLight(prepared_text[i]);
 						break;
 				}
 			
 				convertedText.push({
 					"letterToHighlight" : letterToHighlight,
-					"word" : text[i],
-					"punctuation_delay" : wordHasPunctuationSymbol(text[i])
+					"word" : prepared_text[i],
+					"punctuation_delay" : this.wordHasPunctuationSymbol(prepared_text[i])
 				});
 			}
 
-			return convertedText;
+			return convertedText;					
+		},
 
-			function wordHasPunctuationSymbol(word){
-				punctuation_symbols = word.match(/[\?\‒\!\,\)\;\:\'\"\.\(\*\{\}\[\]\]]/g);
-				return punctuation_symbols != null;
-			}
+		"wordHasPunctuationSymbol" : function(word){
+			punctuation_symbols = word.match(/[\?\‒\!\,\)\;\:\'\"\.\(\*\{\}\[\]\]]/g);
+			return punctuation_symbols != null;
+		},
 
-			function calculateLetterPositionToHighLight (word){
-				textContainerWidth = text_processor.fields.AverageLetterWidth * word.length
-				ORP_Offset = (textContainerWidth*0.265)+(0.5*text_processor.fields.AverageLetterWidth);
-				positionToHighLight = (ORP_Offset/text_processor.fields.AverageLetterWidth);
-				return Math.ceil(positionToHighLight);
-			}					
+		"calculateLetterPositionToHighLight" : function(word){
+			textContainerWidth = this.fields.AverageLetterWidth * word.length
+			ORP_Offset = (textContainerWidth*0.265)+(0.5*this.fields.AverageLetterWidth);
+			positionToHighLight = (ORP_Offset/this.fields.AverageLetterWidth);
+			return Math.ceil(positionToHighLight);
 		}
 	};
 
@@ -246,12 +255,12 @@ ui = {
 		this.getPauseButton().onclick = fn;
 	},
 	"transformAnimateButtonStateToStart" : function (){
-		var button = ui.getPauseButton();
+		var button = this.getPauseButton();
 		button.innerText = "Start!";
 		button.id = "start";
 	},
 	"transformAnimateButtonStateToPause" : function(){
-		var button = ui.getStartButton();
+		var button = this.getStartButton();
 		button.innerText = "Pause";
 		button.id = "pause";
 	},
@@ -273,8 +282,9 @@ ui = {
 	"showStartButton" : function(){
 		this.getStartButton().style.visibility = 'visible';
 	},
-	"switchSpeedButtonStateToActive" : function(speed_button){
-		speed_button.className = speed_button.className + " active";
+	"setSpeedButtonState" : function(speed_button, state){
+		this.deactivateActiveButton();
+		speed_button.className = speed_button.className + " " + state;
 	},
 	"setSpeedButtonsEvent" : function(handler){
 		var nodes = document.getElementsByClassName("btn-group")[0].children;
@@ -290,29 +300,29 @@ ui = {
 	"updateProgressBar" : function(iterator, data_length){
 		if (iterator !== 0){
 			var step = 100/data_length;
-			ui.setProgressBarPercentage((iterator+1) * step);
+			this.setProgressBarPercentage((iterator+1) * step);
 		}
 		else{
-			ui.setProgressBarPercentage(0);			
+			this.setProgressBarPercentage(0);			
 		}
 	},
 	"showWord" : function(element, progress, animation_end_cb){
-		if (progress < ui.fields.progress_length){
-			ui.getTextContainer().innerHTML = ui.generateHighlightedWord(element.letterToHighlight, element.word);
-			ui.indentWord();
-			ui.showTextContainer();
-			ui.updateProgressBar(progress, ui.fields.progress_length);
+		if (progress < this.fields.progress_length){
+			this.getTextContainer().innerHTML = this.generateHighlightedWord(element.letterToHighlight, element.word);
+			this.indentWord();
+			this.showTextContainer();
+			this.updateProgressBar(progress, this.fields.progress_length);
 		}
 		else{
-			ui.clearTextContainer();
-			ui.updateProgressBar(0);
-			ui.transformAnimateButtonStateToStart();
+			this.clearTextContainer();
+			this.updateProgressBar(0);
+			this.transformAnimateButtonStateToStart();
 			animation_end_cb();
 		}
 	},
 	"indentWord" : function(){
-		var position = ui.getSmallbBarLength() - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
-		ui.setTextContainerLeftPosition(position);
+		var position = this.getSmallbBarLength() - (this.getHighlightedLetterLeftOffset()+(this.getHighlightedLetterWidth()/2)-3);
+		this.setTextContainerLeftPosition(position);
 	},
 	"generateHighlightedWord" : function (highlightPosition, string){	
 		var processedWord = "";	

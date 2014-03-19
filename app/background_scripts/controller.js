@@ -4,6 +4,12 @@ var system = require('./system.js');
 var text_processor = require('./text_processor.js');
 
 controller = {
+		"init" : function(selected_text){
+			system.fields.text = selected_text;
+			ui.setStartButtonEvent(this.start);
+			ui.setSpeedButtonsEvent(this.setSpeed);
+			ui.showStartButton();
+		},
 		"start" : function(){
 			convertedElements = text_processor.convertText(system.fields.text);
 			system.convertedElements = convertedElements;
@@ -28,8 +34,7 @@ controller = {
 			ui.setStartButtonEvent(controller.start);		
 		},
 		"setSpeed" : function(e){
-			ui.deactivateActiveButton();
-			ui.switchSpeedButtonStateToActive(e.target);
+			ui.setSpeedButtonState(e.target, 'active');
 			animator.setAnimationSpeed(e.target.value);
 		}
 	};
