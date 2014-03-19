@@ -48,19 +48,16 @@ animator = {
 				this.stopAnimation();
 			}
 			else{
-				console.log(convertedElements[this.fields.reading_progress_counter].word);
 				var cE = convertedElements[this.fields.reading_progress_counter];
 				this.fields.reading_progress_counter++;
 				display(
 					cE,
 					this.fields.reading_progress_counter
-				);
-					
+				);	
 				this.fields.animation = setTimeout(
 					animate,
 					animator.clalculateDelay(cE.punctuation_delay, cE.word.length > 12)
 				);
-
 				function animate(){
 					animator.startAnimation(convertedElements, display);
 				}	
