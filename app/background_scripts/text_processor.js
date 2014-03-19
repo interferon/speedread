@@ -1,16 +1,15 @@
-var ui = require('./ui.js');
-var system = require('./system.js');
-
-
 text_processor = {
-		"convertTextForAnimation" : function (textToAnimate, delay){
+		"fields" : {
+			"AverageLetterWidth" : 18
+		},
+		"convertText" : function (text){
 			var convertedText,
 				letterToHighlight,
 				delayChangeForPunctuation = false;
 
 			convertedText = [];
-			for (var i = 0; i < textToAnimate.length; i++){
-				switch(textToAnimate[i].length){
+			for (var i = 0; i < text.length; i++){
+				switch(text[i].length){
 					case 1:
 						letterToHighlight = 1;
 						break;
@@ -18,51 +17,30 @@ text_processor = {
 						letterToHighlight = 2;
 						break;
 					default :
-						letterToHighlight = calculateLetterPositionToHighLight(textToAnimate[i]);
+						letterToHighlight = calculateLetterPositionToHighLight(text[i]);
 						break;
 				}
 			
 				convertedText.push({
 					"letterToHighlight" : letterToHighlight,
-					"word" : textToAnimate[i],
-					"punctuation_delay" : wordHasPunctuationSymbol(textToAnimate[i])
+					"word" : text[i],
+					"punctuation_delay" : wordHasPunctuationSymbol(text[i])
 				});
 			}
 
-			system.fields.convertedText = convertedText;
-			
 			return convertedText;
 
 			function wordHasPunctuationSymbol(word){
-				return word.match(/[\?\‒\!\,\)\;\:\'\"\.\(\*\{\}\[\]\]]/g);
+				punctuation_symbols = word.match(/[\?\‒\!\,\)\;\:\'\"\.\(\*\{\}\[\]\]]/g);
+				return punctuation_symbols != null;
 			}
 
 			function calculateLetterPositionToHighLight (word){
-				ui.hideTextContainer();
-				charactersQuantity = word.length;
-				highlightedWordElement = text_processor.generateHighlightedWord(0, word);
-				ui.getTextContainer().innerHTML = highlightedWordElement;	
-				
-				textContainerWidth = ui.getTextContainer().offsetWidth;
-				AverageCharacterWidth = textContainerWidth/charactersQuantity;
-				ORP_Offset = (textContainerWidth*0.265)+(0.5*AverageCharacterWidth);
-				positionToHighLight = (ORP_Offset/AverageCharacterWidth);
-				ui.clearTextContainer();
+				textContainerWidth = text_processor.fields.AverageLetterWidth * word.length
+				ORP_Offset = (textContainerWidth*0.265)+(0.5*text_processor.fields.AverageLetterWidth);
+				positionToHighLight = (ORP_Offset/text_processor.fields.AverageLetterWidth);
 				return Math.ceil(positionToHighLight);
-
 			}					
-		},
-		"generateHighlightedWord" : function (highlightPosition, string){	
-			var processedWord = "";	
-			for (var i = 0; i < string.length; i++) {
-				var cssClass = "";
-				if (i == highlightPosition-1){
-					cssClass = "highlight";
-				}
-				var label = "<label class='"+cssClass+"'>"+string[i]+"</label>";
-				processedWord = processedWord + label;
-			}
-			return processedWord;
 		}
 	};
 

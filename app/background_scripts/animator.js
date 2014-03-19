@@ -7,7 +7,7 @@ animator = {
 		"fields" : {
 			"delay" : 240,
 			"long_word_delay" : 100,
-			"wpm" : null,
+			"wpm" : 250,
 			// +1 for every read word
 			"reading_progress_counter" : 0,
 			"animation" : null,
@@ -27,8 +27,6 @@ animator = {
 		"stopAnimation" : function (){
 			clearTimeout(animator.fields.animation);
 			animator.fields.reading_progress_counter = 0;
-			ui.clearTextContainer();
-			ui.updateProgressBar(0);
 		},
 		"pauseAnimation" : function(){
 			clearTimeout(animator.fields.animation);
@@ -44,24 +42,26 @@ animator = {
 
 			return delay;
 		},
-		"startAnimation" : function(selected_text){
-			var convertedElements = system.fields.convertedElements || text_processor.convertTextForAnimation(selected_text);
-			ui.fields.progress_length = convertedElements.length;
+		"startAnimation" : function(convertedElements, display){
 			animate();
-
 			function animate(){
 				if (animator.fields.reading_progress_counter == convertedElements.length){
 					animator.stopAnimation();
-					ui.transformAnimateButtonStateToStart();
-					ui.setStartButtonEvent(controller.start);
-				}else{
+				}
+				else{
 					var cE = convertedElements[animator.fields.reading_progress_counter];
-					var generatedWord = text_processor.generateHighlightedWord(cE.letterToHighlight, cE.word)
-					ui.showWord(generatedWord, animator.fields.reading_progress_counter);
 					animator.fields.reading_progress_counter++;
-					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(cE.punctuation_delay, cE.word.length > 12));
+					display(
+						cE,
+						animator.fields.reading_progress_counter
+					);
+					animator.fields.animation = setTimeout(
+						animate,
+						animator.clalculateDelay(cE.punctuation_delay, cE.word.length > 12)
+					);
 				}
 			}		
 		}
 	};
+
 module.exports = animator;

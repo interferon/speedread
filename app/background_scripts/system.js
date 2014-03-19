@@ -1,7 +1,8 @@
 system = {
 	"fields" : {
-		"text" : null,
-		"convertedText" : null
+		"text" : "",
+		"convertedElements" : [],
+		"progress_length" : 0 
 	},
 	"getUserSelectedText": function (cb){
 		// Chrome API: 

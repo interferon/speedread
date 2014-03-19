@@ -8,7 +8,7 @@ animator = {
 		"fields" : {
 			"delay" : 240,
 			"long_word_delay" : 100,
-			"wpm" : null,
+			"wpm" : 250,
 			// +1 for every read word
 			"reading_progress_counter" : 0,
 			"animation" : null,
@@ -28,8 +28,6 @@ animator = {
 		"stopAnimation" : function (){
 			clearTimeout(animator.fields.animation);
 			animator.fields.reading_progress_counter = 0;
-			ui.clearTextContainer();
-			ui.updateProgressBar(0);
 		},
 		"pauseAnimation" : function(){
 			clearTimeout(animator.fields.animation);
@@ -45,35 +43,46 @@ animator = {
 
 			return delay;
 		},
-		"startAnimation" : function(selected_text){
-			var convertedElements = system.fields.convertedElements || text_processor.convertTextForAnimation(selected_text);
-			ui.fields.progress_length = convertedElements.length;
+		"startAnimation" : function(convertedElements, display){
 			animate();
-
 			function animate(){
 				if (animator.fields.reading_progress_counter == convertedElements.length){
 					animator.stopAnimation();
-					ui.transformAnimateButtonStateToStart();
-					ui.setStartButtonEvent(controller.start);
-				}else{
+				}
+				else{
 					var cE = convertedElements[animator.fields.reading_progress_counter];
-					var generatedWord = text_processor.generateHighlightedWord(cE.letterToHighlight, cE.word)
-					ui.showWord(generatedWord, animator.fields.reading_progress_counter);
 					animator.fields.reading_progress_counter++;
-					animator.fields.animation = setTimeout(animate, animator.clalculateDelay(cE.punctuation_delay, cE.word.length > 12));
+					display(
+						cE,
+						animator.fields.reading_progress_counter
+					);
+					animator.fields.animation = setTimeout(
+						animate,
+						animator.clalculateDelay(cE.punctuation_delay, cE.word.length > 12)
+					);
 				}
 			}		
 		}
 	};
+
 module.exports = animator;
 },{"./controller.js":2,"./system.js":4,"./text_processor.js":5,"./ui.js":6}],2:[function(require,module,exports){
 var animator = require('./animator.js');
 var ui = require('./ui.js');
 var system = require('./system.js');
+var text_processor = require('./text_processor.js');
 
 controller = {
 		"start" : function(){
-			animator.startAnimation(system.fields.text);
+			convertedElements = text_processor.convertText(system.fields.text);
+			system.convertedElements = convertedElements;
+			ui.fields.progress_length = convertedElements.length;
+			animator.startAnimation(
+				convertedElements,
+				function(convertedElement, progress){
+					ui.showWord(convertedElement, progress);
+				}
+			);
 			ui.transformAnimateButtonStateToPause();
 			ui.setPauseButtonEvent(controller.pause);
 		},
@@ -83,11 +92,18 @@ controller = {
 			ui.setStartButtonEvent(controller.start);		
 		},
 		"setSpeed" : function(e){
+			animator.pauseAnimation();
 			ui.deactivateActiveButton();
 			ui.switchSpeedButtonStateToActive(e.target);
-			animator.pauseAnimation();
 			animator.setAnimationSpeed(e.target.value);
-			animator.startAnimation(system.fields.text);
+			if (system.fields.convertedElements.length !== 0){
+				animator.startAnimation(
+					system.fields.convertedElements,
+					function(convertedElement, progress){
+						ui.showWord(convertedElement, progress);
+					}
+				);
+			}
 			if (ui.getStartButton() !== null)
 				ui.transformAnimateButtonStateToPause();
 				ui.setPauseButtonEvent(controller.pause);
@@ -95,7 +111,7 @@ controller = {
 	};
 
 module.exports = controller;
-},{"./animator.js":1,"./system.js":4,"./ui.js":6}],3:[function(require,module,exports){
+},{"./animator.js":1,"./system.js":4,"./text_processor.js":5,"./ui.js":6}],3:[function(require,module,exports){
 var system = require('./system.js');
 var controller = require('./controller.js');
 var ui = require('./ui.js');
@@ -111,8 +127,9 @@ system.getUserSelectedText(
 },{"./controller.js":2,"./system.js":4,"./ui.js":6}],4:[function(require,module,exports){
 system = {
 	"fields" : {
-		"text" : null,
-		"convertedText" : null
+		"text" : "",
+		"convertedElements" : [],
+		"progress_length" : 0 
 	},
 	"getUserSelectedText": function (cb){
 		// Chrome API: 
@@ -154,19 +171,18 @@ system = {
 
 module.exports = system;
 },{}],5:[function(require,module,exports){
-var ui = require('./ui.js');
-var system = require('./system.js');
-
-
 text_processor = {
-		"convertTextForAnimation" : function (textToAnimate, delay){
+		"fields" : {
+			"AverageLetterWidth" : 18
+		},
+		"convertText" : function (text){
 			var convertedText,
 				letterToHighlight,
 				delayChangeForPunctuation = false;
 
 			convertedText = [];
-			for (var i = 0; i < textToAnimate.length; i++){
-				switch(textToAnimate[i].length){
+			for (var i = 0; i < text.length; i++){
+				switch(text[i].length){
 					case 1:
 						letterToHighlight = 1;
 						break;
@@ -174,56 +190,37 @@ text_processor = {
 						letterToHighlight = 2;
 						break;
 					default :
-						letterToHighlight = calculateLetterPositionToHighLight(textToAnimate[i]);
+						letterToHighlight = calculateLetterPositionToHighLight(text[i]);
 						break;
 				}
 			
 				convertedText.push({
 					"letterToHighlight" : letterToHighlight,
-					"word" : textToAnimate[i],
-					"punctuation_delay" : wordHasPunctuationSymbol(textToAnimate[i])
+					"word" : text[i],
+					"punctuation_delay" : wordHasPunctuationSymbol(text[i])
 				});
 			}
 
-			system.fields.convertedText = convertedText;
-			
 			return convertedText;
 
 			function wordHasPunctuationSymbol(word){
-				return word.match(/[\?\‒\!\,\)\;\:\'\"\.\(\*\{\}\[\]\]]/g);
+				punctuation_symbols = word.match(/[\?\‒\!\,\)\;\:\'\"\.\(\*\{\}\[\]\]]/g);
+				return punctuation_symbols != null;
 			}
 
 			function calculateLetterPositionToHighLight (word){
-				ui.hideTextContainer();
-				charactersQuantity = word.length;
-				highlightedWordElement = text_processor.generateHighlightedWord(0, word);
-				ui.getTextContainer().innerHTML = highlightedWordElement;	
-				
-				textContainerWidth = ui.getTextContainer().offsetWidth;
-				AverageCharacterWidth = textContainerWidth/charactersQuantity;
-				ORP_Offset = (textContainerWidth*0.265)+(0.5*AverageCharacterWidth);
-				positionToHighLight = (ORP_Offset/AverageCharacterWidth);
-				ui.clearTextContainer();
+				textContainerWidth = text_processor.fields.AverageLetterWidth * word.length
+				ORP_Offset = (textContainerWidth*0.265)+(0.5*text_processor.fields.AverageLetterWidth);
+				positionToHighLight = (ORP_Offset/text_processor.fields.AverageLetterWidth);
 				return Math.ceil(positionToHighLight);
-
 			}					
-		},
-		"generateHighlightedWord" : function (highlightPosition, string){	
-			var processedWord = "";	
-			for (var i = 0; i < string.length; i++) {
-				var cssClass = "";
-				if (i == highlightPosition-1){
-					cssClass = "highlight";
-				}
-				var label = "<label class='"+cssClass+"'>"+string[i]+"</label>";
-				processedWord = processedWord + label;
-			}
-			return processedWord;
 		}
 	};
 
 module.exports = text_processor;
-},{"./system.js":4,"./ui.js":6}],6:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
+var controller = require('./controller.js');
+
 ui = {
 	"fields" : {
 		"progress_length" : 0,
@@ -309,17 +306,37 @@ ui = {
 			ui.setProgressBarPercentage(0);			
 		}
 	},
-	"showWord" : function(html, progress){
-		ui.getTextContainer().innerHTML = html;
-		ui.indentWord();
-		ui.showTextContainer();
-		ui.updateProgressBar(progress, ui.fields.progress_length);
+	"showWord" : function(element, progress){
+		if (progress < ui.fields.progress_length){
+			ui.getTextContainer().innerHTML = ui.generateHighlightedWord(element.letterToHighlight, element.word);
+			ui.indentWord();
+			ui.showTextContainer();
+			ui.updateProgressBar(progress, ui.fields.progress_length);
+		}
+		else{
+			ui.clearTextContainer();
+			ui.updateProgressBar(0);
+			ui.transformAnimateButtonStateToStart();
+			ui.setStartButtonEvent(controller.start);
+		}
 	},
 	"indentWord" : function(){
-			var position = ui.getSmallbBarLength() - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
-			ui.setTextContainerLeftPosition(position);
+		var position = ui.getSmallbBarLength() - (ui.getHighlightedLetterLeftOffset()+(ui.getHighlightedLetterWidth()/2)-3);
+		ui.setTextContainerLeftPosition(position);
+	},
+	"generateHighlightedWord" : function (highlightPosition, string){	
+		var processedWord = "";	
+		for (var i = 0; i < string.length; i++) {
+			var cssClass = "";
+			if (i == highlightPosition-1){
+				cssClass = "highlight";
+			}
+			var label = "<label class='"+cssClass+"'>"+string[i]+"</label>";
+			processedWord = processedWord + label;
+		}
+		return processedWord;
 	}
 };
 
 module.exports = ui;
-},{}]},{},[3])
+},{"./controller.js":2}]},{},[3])
