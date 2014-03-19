@@ -1,5 +1,3 @@
-var controller = require('./controller.js');
-
 ui = {
 	"fields" : {
 		"progress_length" : 0,
@@ -85,7 +83,7 @@ ui = {
 			ui.setProgressBarPercentage(0);			
 		}
 	},
-	"showWord" : function(element, progress){
+	"showWord" : function(element, progress, animation_end_cb){
 		if (progress < ui.fields.progress_length){
 			ui.getTextContainer().innerHTML = ui.generateHighlightedWord(element.letterToHighlight, element.word);
 			ui.indentWord();
@@ -96,7 +94,7 @@ ui = {
 			ui.clearTextContainer();
 			ui.updateProgressBar(0);
 			ui.transformAnimateButtonStateToStart();
-			ui.setStartButtonEvent(controller.start);
+			animation_end_cb();
 		}
 	},
 	"indentWord" : function(){

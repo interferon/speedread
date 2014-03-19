@@ -11,7 +11,12 @@ controller = {
 			animator.startAnimation(
 				convertedElements,
 				function(convertedElement, progress){
-					ui.showWord(convertedElement, progress);
+					ui.showWord(
+						convertedElement,
+						progress,
+						function(){
+							ui.setStartButtonEvent(controller.start);
+					});
 				}
 			);
 			ui.transformAnimateButtonStateToPause();

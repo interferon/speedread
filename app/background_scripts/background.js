@@ -80,7 +80,12 @@ controller = {
 			animator.startAnimation(
 				convertedElements,
 				function(convertedElement, progress){
-					ui.showWord(convertedElement, progress);
+					ui.showWord(
+						convertedElement,
+						progress,
+						function(){
+							ui.setStartButtonEvent(controller.start);
+					});
 				}
 			);
 			ui.transformAnimateButtonStateToPause();
@@ -219,8 +224,6 @@ text_processor = {
 
 module.exports = text_processor;
 },{}],6:[function(require,module,exports){
-var controller = require('./controller.js');
-
 ui = {
 	"fields" : {
 		"progress_length" : 0,
@@ -306,7 +309,7 @@ ui = {
 			ui.setProgressBarPercentage(0);			
 		}
 	},
-	"showWord" : function(element, progress){
+	"showWord" : function(element, progress, animation_end_cb){
 		if (progress < ui.fields.progress_length){
 			ui.getTextContainer().innerHTML = ui.generateHighlightedWord(element.letterToHighlight, element.word);
 			ui.indentWord();
@@ -317,7 +320,7 @@ ui = {
 			ui.clearTextContainer();
 			ui.updateProgressBar(0);
 			ui.transformAnimateButtonStateToStart();
-			ui.setStartButtonEvent(controller.start);
+			animation_end_cb();
 		}
 	},
 	"indentWord" : function(){
@@ -339,4 +342,4 @@ ui = {
 };
 
 module.exports = ui;
-},{"./controller.js":2}]},{},[3])
+},{}]},{},[3])
