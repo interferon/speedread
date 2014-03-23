@@ -1,7 +1,6 @@
 module.exports = (function(){
 		
-	var AverageLetterWidth = 18;
-	var done = null;	
+	var AverageLetterWidth = 18;	
 
 	function prepareText(selected_text){
 			var preparedText = [];
@@ -31,11 +30,6 @@ module.exports = (function(){
 		}
 
 	return {
-		"init" : function(app){
-			done = function(convertText){
-				app.trigger('textConverted', convertText);
-			}	
-		},
 		"convertText" : function (text){
 			prepared_text = prepareText(text);
 			var convertedText,
@@ -63,7 +57,7 @@ module.exports = (function(){
 				});
 			}
 
-			done(convertedText);					
+			app.trigger('textConverted', convertedText);					
 		}
 	}
 

@@ -1,8 +1,6 @@
 module.exports = (function() {
 
 	var step = 0;
-	var app = null;
-
 
 	return {
 		"showWord" : function(data){
@@ -11,14 +9,11 @@ module.exports = (function() {
 			showTextContainer();
 			updateProgressBar(data.progress);
 		},
-		"init": function (_app){
-			app = _app;
+		"init": function (length){
+			step = 100/length;
 			showStartButton();
 			setStartButtonEvent();
 			setSpeedButtonsEvent();
-		},
-		"setProgressBarLength" : function(length){
-			step = 100/length;
 		},
 		"end" : function(){
 			updateProgressBar(0);

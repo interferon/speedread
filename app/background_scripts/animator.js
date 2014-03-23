@@ -1,6 +1,5 @@
 module.exports = (function() {
-	var app = null;
-	var display = null;
+
 	var convertedElements = [];
 	var delay = 240;
 	var long_word_delay = 100;
@@ -28,12 +27,7 @@ module.exports = (function() {
 	}
 
 	var publicMethods = {
-		"init" : function(_app){
-			app = _app;
-			display = function(data){
-				app.trigger('wordProvided', data);
-			}
-		},
+
 		"setAnimationSpeed" : function (wpm){
 			delay = (60/wpm)*1000;
 			wpm = wpm;
@@ -56,7 +50,7 @@ module.exports = (function() {
 			else{
 				var cE = convertedElements[reading_progress_counter];
 				reading_progress_counter++;
-				display({'element' : cE, 'progress' : reading_progress_counter});
+				app.trigger('wordProvided', {'element' : cE, 'progress' : reading_progress_counter});
 				var animate = function(){
 					publicMethods.start(convertedElements);
 				}	

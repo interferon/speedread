@@ -1,7 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = (function() {
-	var app = null;
-	var display = null;
+
 	var convertedElements = [];
 	var delay = 240;
 	var long_word_delay = 100;
@@ -29,12 +28,7 @@ module.exports = (function() {
 	}
 
 	var publicMethods = {
-		"init" : function(_app){
-			app = _app;
-			display = function(data){
-				app.trigger('wordProvided', data);
-			}
-		},
+
 		"setAnimationSpeed" : function (wpm){
 			delay = (60/wpm)*1000;
 			wpm = wpm;
@@ -57,7 +51,7 @@ module.exports = (function() {
 			else{
 				var cE = convertedElements[reading_progress_counter];
 				reading_progress_counter++;
-				display({'element' : cE, 'progress' : reading_progress_counter});
+				app.trigger('wordProvided', {'element' : cE, 'progress' : reading_progress_counter});
 				var animate = function(){
 					publicMethods.start(convertedElements);
 				}	
@@ -151,22 +145,17 @@ module.exports  = (function () {
 
 
 },{}],3:[function(require,module,exports){
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded', function(){	
 	
+	app = require('./app.js');
+	var textGetter = require('./textGetter.js');
 	var animator = require('./animator.js');
 	var ui = require('./ui.js');
-	var textGetter = require('./textGetter');
 	var text_processor = require('./text_processor.js');
-	var app = require('./app.js');
-
-	ui.init(app);
-	textGetter.init(app);
-	text_processor.init(app);
-	animator.init(app);
-
+	
 	app.bind('gotText', [{'name' : 'text_processor', 'callback' : text_processor.convertText}]);
 	app.bind('textConverted', [{'name' : 'animator', 'callback' : animator.bindConvertedText },
-		{'name' : 'ui', 'callback' : ui.setProgressBarLength}]);
+		{'name' : 'ui', 'callback' : ui.init}]);
 	app.bind('wordProvided', [ {'name' : 'ui', 'callback' : ui.showWord}]);
 	app.bind('animationStarted', [{'name' : 'animator', 'callback' : animator.start}]);
 	app.bind('animationPaused', [{'name' : 'animator', 'callback' : animator.pause}]);
@@ -176,17 +165,9 @@ document.addEventListener('DOMContentLoaded', function(){
 	textGetter.getUserSelectedText();
 });
 
-},{"./animator.js":1,"./app.js":2,"./textGetter":4,"./text_processor.js":5,"./ui.js":6}],4:[function(require,module,exports){
+},{"./animator.js":1,"./app.js":2,"./textGetter.js":4,"./text_processor.js":5,"./ui.js":6}],4:[function(require,module,exports){
 module.exports = (function(){
-	
-	var done = null;
-
 	return {
-		"init" : function(app){
-			done = function(text){
-				app.trigger('gotText', text);
-			}	
-		},
 		"getUserSelectedText": function (){
 			// Chrome API: 
 			chrome.tabs.query(
@@ -202,7 +183,7 @@ module.exports = (function(){
 						},
 						function(response) {
 							if (response.text.length > 10){
-								done(response.text);
+								window.app.trigger('gotText', response.text);
 							}
 						}
 					);
@@ -214,8 +195,7 @@ module.exports = (function(){
 },{}],5:[function(require,module,exports){
 module.exports = (function(){
 		
-	var AverageLetterWidth = 18;
-	var done = null;	
+	var AverageLetterWidth = 18;	
 
 	function prepareText(selected_text){
 			var preparedText = [];
@@ -245,11 +225,6 @@ module.exports = (function(){
 		}
 
 	return {
-		"init" : function(app){
-			done = function(convertText){
-				app.trigger('textConverted', convertText);
-			}	
-		},
 		"convertText" : function (text){
 			prepared_text = prepareText(text);
 			var convertedText,
@@ -277,7 +252,7 @@ module.exports = (function(){
 				});
 			}
 
-			done(convertedText);					
+			app.trigger('textConverted', convertedText);					
 		}
 	}
 
@@ -287,8 +262,6 @@ module.exports = (function(){
 module.exports = (function() {
 
 	var step = 0;
-	var app = null;
-
 
 	return {
 		"showWord" : function(data){
@@ -297,14 +270,11 @@ module.exports = (function() {
 			showTextContainer();
 			updateProgressBar(data.progress);
 		},
-		"init": function (_app){
-			app = _app;
+		"init": function (length){
+			step = 100/length;
 			showStartButton();
 			setStartButtonEvent();
 			setSpeedButtonsEvent();
-		},
-		"setProgressBarLength" : function(length){
-			step = 100/length;
 		},
 		"end" : function(){
 			updateProgressBar(0);

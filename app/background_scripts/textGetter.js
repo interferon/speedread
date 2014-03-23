@@ -1,13 +1,5 @@
 module.exports = (function(){
-	
-	var done = null;
-
 	return {
-		"init" : function(app){
-			done = function(text){
-				app.trigger('gotText', text);
-			}	
-		},
 		"getUserSelectedText": function (){
 			// Chrome API: 
 			chrome.tabs.query(
@@ -23,7 +15,7 @@ module.exports = (function(){
 						},
 						function(response) {
 							if (response.text.length > 10){
-								done(response.text);
+								window.app.trigger('gotText', response.text);
 							}
 						}
 					);
