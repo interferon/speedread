@@ -15,7 +15,7 @@ module.exports = (function(){
 						},
 						function(response) {
 							if (response.text.length > 10){
-								window.app.trigger('gotText', response.text);
+								mediator.trigger('gotText', response.text);
 							}
 						}
 					);
