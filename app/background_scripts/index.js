@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function(){
 	app.bind('animationStarted', [{'name' : 'animator', 'callback' : animator.start}]);
 	app.bind('animationPaused', [{'name' : 'animator', 'callback' : animator.pause}]);
 	app.bind('animationSpeedChange', [{'name' : 'animator', 'callback' : animator.setAnimationSpeed}]);
+	app.bind('animationFinished', [{'name' : 'ui', 'callback' : ui.end}])
 
 	textGetter.getUserSelectedText();
 });

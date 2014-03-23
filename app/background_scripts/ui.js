@@ -19,6 +19,12 @@ module.exports = (function() {
 		},
 		"setProgressBarLength" : function(length){
 			step = 100/length;
+		},
+		"end" : function(){
+			updateProgressBar(0);
+			clearTextContainer();
+			transformAnimateButtonStateToStart();
+			setStartButtonEvent();
 		}
 	}
 
@@ -115,9 +121,15 @@ module.exports = (function() {
 		var nodes = document.getElementsByClassName("btn-group")[0].children;
 		for(var i = 0; i < nodes.length; i++){
 			nodes[i].onclick = function(event){
+				deactivateActiveButton();
+				makeSelectedSpeedButtonActive(event.target);
 				app.trigger('animationSpeedChange', event.target.value);
 			};
 		}
+	}
+
+	function makeSelectedSpeedButtonActive(button){
+		button.className = button.className + " active";
 	}
 
 	function deactivateActiveButton (){

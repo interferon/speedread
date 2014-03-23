@@ -1,6 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = (function() {
-	
+	var app = null;
 	var display = null;
 	var convertedElements = [];
 	var delay = 240;
@@ -29,7 +29,8 @@ module.exports = (function() {
 	}
 
 	var publicMethods = {
-		"init" : function(app){
+		"init" : function(_app){
+			app = _app;
 			display = function(data){
 				app.trigger('wordProvided', data);
 			}
@@ -44,6 +45,7 @@ module.exports = (function() {
 		"stop" : function (){
 			clearTimeout(animation);
 			reading_progress_counter = 0;
+			app.trigger('animationFinished');
 		},
 		"pause" : function(){
 			clearTimeout(animation);
@@ -78,7 +80,8 @@ module.exports  = (function () {
 		'wordProvided' : {},
 		'animationStarted' : {},
 		'animationPaused' : {},
-		'animationSpeedChange' : {}
+		'animationSpeedChange' : {},
+		'animationFinished' : {}
 	}
 
 	var events = {
@@ -121,6 +124,12 @@ module.exports  = (function () {
 				var listener = listeners.animationSpeedChange[key];
 				listener.callback(speed);
 			}
+		},
+		'animationFinished' : function(){
+			for(var key in listeners.animationFinished){
+				var listener = listeners.animationFinished[key];
+				listener.callback();
+			}
 		}
 	}
 	return {
@@ -162,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function(){
 	app.bind('animationStarted', [{'name' : 'animator', 'callback' : animator.start}]);
 	app.bind('animationPaused', [{'name' : 'animator', 'callback' : animator.pause}]);
 	app.bind('animationSpeedChange', [{'name' : 'animator', 'callback' : animator.setAnimationSpeed}]);
+	app.bind('animationFinished', [{'name' : 'ui', 'callback' : ui.end}])
 
 	textGetter.getUserSelectedText();
 });
@@ -295,6 +305,12 @@ module.exports = (function() {
 		},
 		"setProgressBarLength" : function(length){
 			step = 100/length;
+		},
+		"end" : function(){
+			updateProgressBar(0);
+			clearTextContainer();
+			transformAnimateButtonStateToStart();
+			setStartButtonEvent();
 		}
 	}
 
@@ -391,9 +407,15 @@ module.exports = (function() {
 		var nodes = document.getElementsByClassName("btn-group")[0].children;
 		for(var i = 0; i < nodes.length; i++){
 			nodes[i].onclick = function(event){
+				deactivateActiveButton();
+				makeSelectedSpeedButtonActive(event.target);
 				app.trigger('animationSpeedChange', event.target.value);
 			};
 		}
+	}
+
+	function makeSelectedSpeedButtonActive(button){
+		button.className = button.className + " active";
 	}
 
 	function deactivateActiveButton (){

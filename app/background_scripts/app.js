@@ -6,7 +6,8 @@ module.exports  = (function () {
 		'wordProvided' : {},
 		'animationStarted' : {},
 		'animationPaused' : {},
-		'animationSpeedChange' : {}
+		'animationSpeedChange' : {},
+		'animationFinished' : {}
 	}
 
 	var events = {
@@ -48,6 +49,12 @@ module.exports  = (function () {
 			for(var key in listeners.animationSpeedChange){
 				var listener = listeners.animationSpeedChange[key];
 				listener.callback(speed);
+			}
+		},
+		'animationFinished' : function(){
+			for(var key in listeners.animationFinished){
+				var listener = listeners.animationFinished[key];
+				listener.callback();
 			}
 		}
 	}

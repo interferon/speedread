@@ -1,5 +1,5 @@
 module.exports = (function() {
-	
+	var app = null;
 	var display = null;
 	var convertedElements = [];
 	var delay = 240;
@@ -28,7 +28,8 @@ module.exports = (function() {
 	}
 
 	var publicMethods = {
-		"init" : function(app){
+		"init" : function(_app){
+			app = _app;
 			display = function(data){
 				app.trigger('wordProvided', data);
 			}
@@ -43,6 +44,7 @@ module.exports = (function() {
 		"stop" : function (){
 			clearTimeout(animation);
 			reading_progress_counter = 0;
+			app.trigger('animationFinished');
 		},
 		"pause" : function(){
 			clearTimeout(animation);
