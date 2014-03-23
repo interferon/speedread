@@ -1,158 +1,213 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-animator = {
-		"fields" : {
-			"delay" : 240,
-			"long_word_delay" : 100,
-			"wpm" : 250,
-			// +1 for every read word
-			"reading_progress_counter" : 0,
-			"animation" : null,
-			"speed_delay_map" : {
-				"250" : 150,
-				"300" : 120,
-				"350" : 110,
-				"400" : 100,
-				"450" : 90,
-				"500" : 90	
-			}
-		},
-		"setAnimationSpeed": function(wpm){
-			this.fields.delay = (60/wpm)*1000;
-			this.fields.wpm = wpm;
-		},
-		"stopAnimation" : function (){
-			clearTimeout(this.fields.animation);
-			this.fields.reading_progress_counter = 0;
-		},
-		"pauseAnimation" : function(){
-			clearTimeout(this.fields.animation);
-		},
-		"clalculateDelay": function(has_punctuation, long_word){
-			var delay = this.fields.delay;
-			if (has_punctuation || long_word){
-				delay = delay + this.fields.speed_delay_map[this.fields.wpm];
-			};
-			if (long_word && has_punctuation) {
-				delay = delay + this.fields.speed_delay_map[this.fields.wpm] + this.fields.long_word_delay;
-			};
-			return delay;
-		},
-		"startAnimation" : function(convertedElements, display){
-
-			if (this.fields.reading_progress_counter == convertedElements.length){
-				this.stopAnimation();
-			}
-			else{
-				var cE = convertedElements[this.fields.reading_progress_counter];
-				this.fields.reading_progress_counter++;
-				display(
-					cE,
-					this.fields.reading_progress_counter
-				);	
-				this.fields.animation = setTimeout(
-					animate,
-					animator.clalculateDelay(cE.punctuation_delay, cE.word.length > 12)
-				);
-				function animate(){
-					animator.startAnimation(convertedElements, display);
-				}	
-			}		
-		}
+module.exports = (function() {
+	
+	var display = null;
+	var convertedElements = [];
+	var delay = 240;
+	var long_word_delay = 100;
+	var wpm = 250;
+	var reading_progress_counter = 0;
+	var animation = null;
+	var speed_delay_map = {
+		"250" : 150,
+		"300" : 120,
+		"350" : 110,
+		"400" : 100,
+		"450" : 90,
+		"500" : 90	
 	};
 
-module.exports = animator;
-},{}],2:[function(require,module,exports){
-var animator = require('./animator.js');
-var ui = require('./ui.js');
-var system = require('./system.js');
-var text_processor = require('./text_processor.js');
+	function clalculateDelay(has_punctuation, long_word){
+		var delay = delay;
+		if (has_punctuation || long_word){
+			delay = delay + speed_delay_map[wpm];
+		};
+		if (long_word && has_punctuation) {
+			delay = delay + speed_delay_map[wpm] + long_word_delay;
+		};
+		return delay;
+	}
+	function setAnimationSpeed(wpm){
+		delay = (60/wpm)*1000;
+		wpm = wpm;
+	}
 
-controller = {
-		"init" : function(selected_text){
-			system.fields.text = selected_text;
-			ui.setStartButtonEvent(this.start);
-			ui.setSpeedButtonsEvent(this.setSpeed);
-			ui.showStartButton();
+	var publicMethods = {
+		"init" : function(app){
+			display = function(data){
+				app.trigger('wordProvided', data);
+			}
 		},
-		"start" : function(){
-			convertedElements = text_processor.convertText(system.fields.text);
-			system.convertedElements = convertedElements;
-			ui.fields.progress_length = convertedElements.length;
-			animator.startAnimation(
-				convertedElements,
-				function(convertedElement, progress){
-					ui.showWord(
-						convertedElement,
-						progress,
-						function(){
-							ui.setStartButtonEvent(controller.start);
-					});
-				}
-			);
-			ui.transformAnimateButtonStateToPause();
-			ui.setPauseButtonEvent(controller.pause);
+		"bindConvertedText" : function(text){
+			convertedElements = text;
+		},
+		"stop" : function (){
+			clearTimeout(animation);
+			reading_progress_counter = 0;
 		},
 		"pause" : function(){
-			animator.pauseAnimation();	
-			ui.transformAnimateButtonStateToStart();
-			ui.setStartButtonEvent(controller.start);		
+			clearTimeout(animation);
 		},
-		"setSpeed" : function(e){
-			ui.setSpeedButtonState(e.target, 'active');
-			animator.setAnimationSpeed(e.target.value);
-		}
-	};
-
-module.exports = controller;
-},{"./animator.js":1,"./system.js":4,"./text_processor.js":5,"./ui.js":6}],3:[function(require,module,exports){
-var system = require('./system.js');
-var controller = require('./controller.js');
-
-system.getUserSelectedText(
-	function(selected_text){
-		system.fields.text = selected_text;
-		controller.init(selected_text);
-	}
-);
-},{"./controller.js":2,"./system.js":4}],4:[function(require,module,exports){
-system = {
-	"fields" : {
-		"text" : "",
-		"convertedElements" : [],
-		"progress_length" : 0 
-	},
-	"getUserSelectedText": function (cb){
-		// Chrome API: 
-		chrome.tabs.query(
-			{
-				active: true,
-				currentWindow: true
-			}, 
-			function(tabs){
-				chrome.tabs.sendMessage(
-					tabs[0].id,
-					{
-						method: "getSelectedText"
-					},
-					function(response) {
-						if (response.text.length > 10){
-							cb(response.text);
-						}
-					}
-				);
+		"start" : function(){
+			if (reading_progress_counter == convertedElements.length){
+				this.stop();
 			}
-		);
+			else{
+				var cE = convertedElements[reading_progress_counter];
+				reading_progress_counter++;
+				display({'element' : cE, 'progress' : reading_progress_counter});
+				var animate = function(){
+					publicMethods.start(convertedElements);
+				}.bind(this);	
+				animation = setTimeout(
+					animate,
+					clalculateDelay(cE.punctuation_delay, cE.word.length > 12)
+				);	
+			}		
+		}
 	}
-};
 
-module.exports = system;
-},{}],5:[function(require,module,exports){
-text_processor = {
-		"fields" : {
-			"AverageLetterWidth" : 18
+	return publicMethods;
+})();
+},{}],2:[function(require,module,exports){
+module.exports  = (function () {
+	
+	var listeners = {
+		'gotText' : {},
+		'textConverted' : {},
+		'wordProvided' : {},
+		'animationStarted' : {},
+		'animationStoped' : {},
+		'animationSpeedChange' : {}
+	}
+
+	var events = {
+		'gotText' : function(data){
+			for(var key in listeners.gotText){
+				var listener = listeners.gotText[key];
+				listener.callback(data);
+			}
 		},
+		'textConverted' : function(data) {
+			for(var key in listeners.textConverted){
+				var listener = listeners.textConverted[key];
+				if (listener.name == 'ui')
+					listener.callback(data.length);
+				else
+					listener.callback(data);
+			}
 
-		"prepareText" : function (selected_text){
+		},
+		'wordProvided' : function(data) {
+			for(var key in listeners.wordProvided){
+				var listener = listeners.wordProvided[key];
+				listener.callback(data);
+			}
+		},
+		'animationStarted' : function(){
+			for(var key in listeners.animationStarted){
+				var listener = listeners.animationStarted[key];
+				listener.callback();
+			}
+		},
+		'animationStoped' : function(){
+			for(var key in listeners.animationStoped){
+				var listener = listeners.animationStoped[key];
+				listener.callback();
+			}
+		},
+		'animationSpeedChange' : function(speed){
+			for(var key in listeners.animationSpeedChange){
+				var listener = listeners.animationSpeedChange[key];
+				listener.callback(speed);
+			}
+		}
+	}
+	return {
+		'bind' : function(event, listeners_arr){
+			for (var i = 0; i < listeners_arr.length; i++) {
+				listeners[event][listeners_arr[i].name] = listeners_arr[i];
+			};
+			
+		},
+		'trigger' : function(event, data){
+			events[event](data);
+		},
+		'unbind' : function(event, listener_name){
+			delete listeners[event][listener_name];
+		}
+	}
+
+})(); 
+
+
+},{}],3:[function(require,module,exports){
+document.addEventListener('DOMContentLoaded', function(){
+	
+	var animator = require('./animator.js');
+	var ui = require('./ui.js');
+	var textGetter = require('./textGetter');
+	var text_processor = require('./text_processor.js');
+	var app = require('./app.js');
+
+	ui.init(app);
+	textGetter.init(app);
+	text_processor.init(app);
+	animator.init(app);
+
+	app.bind('gotText', [{'name' : 'text_processor', 'callback' : text_processor.convertText}]);
+	app.bind('textConverted', [{'name' : 'animator', 'callback' : animator.bindConvertedText },
+		{'name' : 'ui', 'callback' : ui.setProgressBarLength}]);
+	app.bind('wordProvided', [ {'name' : 'ui', 'callback' : ui.showWord}]);
+	app.bind('animationStarted', [{'name' : 'animator', 'callback' : animator.start}]);
+	app.bind('animationStoped', [{'name' : 'animator', 'callback' : animator.stop}]);
+	app.bind('animationSpeedChange', [{'name' : 'animator', 'callback' : animator.setAnimationSpeed}]);
+
+	textGetter.getUserSelectedText();
+});
+
+},{"./animator.js":1,"./app.js":2,"./textGetter":4,"./text_processor.js":5,"./ui.js":6}],4:[function(require,module,exports){
+module.exports = (function(){
+	
+	var done = null;
+
+	return {
+		"init" : function(app){
+			done = function(text){
+				app.trigger('gotText', text);
+			}	
+		},
+		"getUserSelectedText": function (){
+			// Chrome API: 
+			chrome.tabs.query(
+				{
+					active: true,
+					currentWindow: true
+				}, 
+				function(tabs){
+					chrome.tabs.sendMessage(
+						tabs[0].id,
+						{
+							method: "getSelectedText"
+						},
+						function(response) {
+							if (response.text.length > 10){
+								done(response.text);
+							}
+						}
+					);
+				}
+			);
+		}
+	}
+})();
+},{}],5:[function(require,module,exports){
+module.exports = (function(){
+		
+	var AverageLetterWidth = 18;
+	var done = null;	
+
+	function prepareText(selected_text){
 			var preparedText = [];
 			var splitted_text = splitTextIntoSeparateWords(selected_text)
 			for (var i = 0; i < splitted_text.length; i++) {
@@ -165,10 +220,28 @@ text_processor = {
 				return text.trim().split(/\r\n|\r|\n|\s/g);
 			}
 			return preparedText;
-		},
+		}
 
+		function wordHasPunctuationSymbol (word){
+			punctuation_symbols = word.match(/[\?\‒\!\,\)\;\:\'\"\.\(\*\{\}\[\]\]]/g);
+			return punctuation_symbols != null;
+		}
+
+		function calculateLetterPositionToHighLight (word){
+			textContainerWidth = AverageLetterWidth * word.length
+			ORP_Offset = (textContainerWidth*0.265)+(0.5*AverageLetterWidth);
+			positionToHighLight = (ORP_Offset/AverageLetterWidth);
+			return Math.ceil(positionToHighLight);
+		}
+
+	return {
+		"init" : function(app){
+			done = function(convertText){
+				app.trigger('textConverted', convertText);
+			}	
+		},
 		"convertText" : function (text){
-			prepared_text = this.prepareText(text);
+			prepared_text = prepareText(text);
 			var convertedText,
 				letterToHighlight,
 				delayChangeForPunctuation = false;
@@ -183,140 +256,167 @@ text_processor = {
 						letterToHighlight = 2;
 						break;
 					default :
-						letterToHighlight = this.calculateLetterPositionToHighLight(prepared_text[i]);
+						letterToHighlight = calculateLetterPositionToHighLight(prepared_text[i]);
 						break;
 				}
 			
 				convertedText.push({
 					"letterToHighlight" : letterToHighlight,
 					"word" : prepared_text[i],
-					"punctuation_delay" : this.wordHasPunctuationSymbol(prepared_text[i])
+					"punctuation_delay" : wordHasPunctuationSymbol(prepared_text[i])
 				});
 			}
 
-			return convertedText;					
-		},
-
-		"wordHasPunctuationSymbol" : function(word){
-			punctuation_symbols = word.match(/[\?\‒\!\,\)\;\:\'\"\.\(\*\{\}\[\]\]]/g);
-			return punctuation_symbols != null;
-		},
-
-		"calculateLetterPositionToHighLight" : function(word){
-			textContainerWidth = this.fields.AverageLetterWidth * word.length
-			ORP_Offset = (textContainerWidth*0.265)+(0.5*this.fields.AverageLetterWidth);
-			positionToHighLight = (ORP_Offset/this.fields.AverageLetterWidth);
-			return Math.ceil(positionToHighLight);
+			done(convertedText);					
 		}
-	};
+	}
 
-module.exports = text_processor;
+})();
+
 },{}],6:[function(require,module,exports){
-ui = {
-	"fields" : {
-		"progress_length" : 0,
-	},
-	"getTextContainer" : function(){
+module.exports = (function() {
+
+	var step = 0;
+	var app = null;
+
+
+	return {
+		"showWord" : function(data){
+			getTextContainer().innerHTML = generateHighlightedWord(data.element.letterToHighlight, data.element.word);
+			indentWord();
+			showTextContainer();
+			updateProgressBar(data.progress);
+		},
+		"init": function (_app){
+			app = _app;
+			showStartButton();
+			setStartButtonEvent();
+			setSpeedButtonsEvent();
+		},
+		"setProgressBarLength" : function(length){
+			step = 100/length;
+		}
+	}
+
+	function getTextContainer (){
 		return document.getElementById('textContainer');
-	},
-	"getProgressBar" : function(){
+	}
+
+	function getProgressBar(){
 		return document.getElementById('reading_progress');
-	},
-	"getSmallbBarLength" : function(){
+	}
+
+	function getSmallbBarLength (){
 		return document.getElementsByClassName("small_bar")[0].clientWidth;
-	},
-	"getStartButton" : function(){
+	}
+
+	function getStartButton (){
 		return document.getElementById("start");
-	},
-	"getPauseButton" : function(){
+	}
+
+	function getPauseButton (){
 		return document.getElementById("pause");
-	},
-	"getHighlightedLetterLeftOffset" : function(){
+	}
+
+	function getHighlightedLetterLeftOffset (){
 		return document.getElementsByClassName('highlight')[0].offsetLeft;
-	},
-	"getHighlightedLetterWidth" : function(){
+	}
+
+	function getHighlightedLetterWidth (){
 		return document.getElementsByClassName('highlight')[0].offsetWidth;
-	},
-	"getSelectedSpeedButton" : function(){
+	}
+
+	function getSelectedSpeedButton (){
 		return document.getElementsByClassName('active')[0];
-	},
-	"setStartButtonEvent" : function(fn){
-		this.getStartButton().onclick = fn;
-	},
-	"setPauseButtonEvent" : function(fn){
-		this.getPauseButton().onclick = fn;
-	},
-	"transformAnimateButtonStateToStart" : function (){
-		var button = this.getPauseButton();
+	}
+
+	function setStartButtonEvent (){
+		getStartButton().onclick = function(){
+			app.trigger('animationStarted');
+			transformAnimateButtonStateToPause();
+			setPauseButtonEvent();
+		}
+	}
+
+	function setPauseButtonEvent (){
+		getPauseButton().onclick = function(){
+			app.trigger('animationStoped');
+			transformAnimateButtonStateToStart();
+			setStartButtonEvent();
+		}
+	}
+
+	function transformAnimateButtonStateToStart (){
+		var button = getPauseButton();
 		button.innerText = "Start!";
 		button.id = "start";
-	},
-	"transformAnimateButtonStateToPause" : function(){
-		var button = this.getStartButton();
+	}
+
+	function transformAnimateButtonStateToPause (){
+		var button = getStartButton();
 		button.innerText = "Pause";
 		button.id = "pause";
-	},
-	"setProgressBarPercentage" : function(percents){
-		this.getProgressBar().style.width = percents+"%";
-	},
-	"hideTextContainer": function(){
-		this.getTextContainer().style.visibility = 'visible';
-	},
-	"clearTextContainer" : function(){
-		this.getTextContainer().innerText = '';
-	},
-	"setTextContainerLeftPosition" : function(position){
-		this.getTextContainer().style.left = position + "px";
-	},
-	"showTextContainer" : function(){
-		this.getTextContainer().style.visibility='visible';
-	},
-	"showStartButton" : function(){
-		this.getStartButton().style.visibility = 'visible';
-	},
-	"setSpeedButtonState" : function(speed_button, state){
-		this.deactivateActiveButton();
+	}
+
+	function setProgressBarPercentage (percents){
+		getProgressBar().style.width = percents+"%";
+	}
+
+	function hideTextContainer (){
+		getTextContainer().style.visibility = 'visible';
+	}
+
+	function clearTextContainer (){
+		getTextContainer().innerText = '';
+	}
+
+	function setTextContainerLeftPosition (position){
+		getTextContainer().style.left = position + "px";
+	}
+
+	function showTextContainer (){
+		getTextContainer().style.visibility='visible';
+	}
+
+	function showStartButton (){
+		getStartButton().style.visibility = 'visible';
+	}
+
+	function setSpeedButtonState (speed_button, state){
+		deactivateActiveButton();
 		speed_button.className = speed_button.className + " " + state;
-	},
-	"setSpeedButtonsEvent" : function(handler){
+	}
+
+	function setSpeedButtonsEvent (){
 		var nodes = document.getElementsByClassName("btn-group")[0].children;
 		for(var i = 0; i < nodes.length; i++){
-			nodes[i].onclick = handler;
+			nodes[i].onclick = function(){
+				app.trigger('animationSpeedChange', e.target.value);
+			};
 		}
-	},
-	"deactivateActiveButton" : function(){
+	}
+
+	function deactivateActiveButton (){
 		var active_button = document.getElementsByClassName("active")[0];
 		var classes = active_button.className.split(" ");
 		active_button.className = classes[0]+" "+classes[1];
-	},
-	"updateProgressBar" : function(iterator, data_length){
+	}
+
+	function updateProgressBar (iterator){
 		if (iterator !== 0){
-			var step = 100/data_length;
-			this.setProgressBarPercentage((iterator+1) * step);
+			setProgressBarPercentage((iterator+1) * step);
 		}
 		else{
-			this.setProgressBarPercentage(0);			
+			setProgressBarPercentage(0);			
 		}
-	},
-	"showWord" : function(element, progress, animation_end_cb){
-		if (progress < this.fields.progress_length){
-			this.getTextContainer().innerHTML = this.generateHighlightedWord(element.letterToHighlight, element.word);
-			this.indentWord();
-			this.showTextContainer();
-			this.updateProgressBar(progress, this.fields.progress_length);
-		}
-		else{
-			this.clearTextContainer();
-			this.updateProgressBar(0);
-			this.transformAnimateButtonStateToStart();
-			animation_end_cb();
-		}
-	},
-	"indentWord" : function(){
-		var position = this.getSmallbBarLength() - (this.getHighlightedLetterLeftOffset()+(this.getHighlightedLetterWidth()/2)-3);
-		this.setTextContainerLeftPosition(position);
-	},
-	"generateHighlightedWord" : function (highlightPosition, string){	
+	}
+
+	function indentWord (){
+		var position = getSmallbBarLength() - (getHighlightedLetterLeftOffset()+(getHighlightedLetterWidth()/2)-3);
+		setTextContainerLeftPosition(position);
+	}
+
+	function generateHighlightedWord  (highlightPosition, string){	
 		var processedWord = "";	
 		for (var i = 0; i < string.length; i++) {
 			var cssClass = "";
@@ -328,7 +428,5 @@ ui = {
 		}
 		return processedWord;
 	}
-};
-
-module.exports = ui;
+})();
 },{}]},{},[3])

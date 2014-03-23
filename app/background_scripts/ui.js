@@ -1,108 +1,146 @@
-ui = {
-	"fields" : {
-		"progress_length" : 0,
-	},
-	"getTextContainer" : function(){
+module.exports = (function() {
+
+	var step = 0;
+	var app = null;
+
+
+	return {
+		"showWord" : function(data){
+			getTextContainer().innerHTML = generateHighlightedWord(data.element.letterToHighlight, data.element.word);
+			indentWord();
+			showTextContainer();
+			updateProgressBar(data.progress);
+		},
+		"init": function (_app){
+			app = _app;
+			showStartButton();
+			setStartButtonEvent();
+			setSpeedButtonsEvent();
+		},
+		"setProgressBarLength" : function(length){
+			step = 100/length;
+		}
+	}
+
+	function getTextContainer (){
 		return document.getElementById('textContainer');
-	},
-	"getProgressBar" : function(){
+	}
+
+	function getProgressBar(){
 		return document.getElementById('reading_progress');
-	},
-	"getSmallbBarLength" : function(){
+	}
+
+	function getSmallbBarLength (){
 		return document.getElementsByClassName("small_bar")[0].clientWidth;
-	},
-	"getStartButton" : function(){
+	}
+
+	function getStartButton (){
 		return document.getElementById("start");
-	},
-	"getPauseButton" : function(){
+	}
+
+	function getPauseButton (){
 		return document.getElementById("pause");
-	},
-	"getHighlightedLetterLeftOffset" : function(){
+	}
+
+	function getHighlightedLetterLeftOffset (){
 		return document.getElementsByClassName('highlight')[0].offsetLeft;
-	},
-	"getHighlightedLetterWidth" : function(){
+	}
+
+	function getHighlightedLetterWidth (){
 		return document.getElementsByClassName('highlight')[0].offsetWidth;
-	},
-	"getSelectedSpeedButton" : function(){
+	}
+
+	function getSelectedSpeedButton (){
 		return document.getElementsByClassName('active')[0];
-	},
-	"setStartButtonEvent" : function(fn){
-		this.getStartButton().onclick = fn;
-	},
-	"setPauseButtonEvent" : function(fn){
-		this.getPauseButton().onclick = fn;
-	},
-	"transformAnimateButtonStateToStart" : function (){
-		var button = this.getPauseButton();
+	}
+
+	function setStartButtonEvent (){
+		getStartButton().onclick = function(){
+			app.trigger('animationStarted');
+			transformAnimateButtonStateToPause();
+			setPauseButtonEvent();
+		}
+	}
+
+	function setPauseButtonEvent (){
+		getPauseButton().onclick = function(){
+			app.trigger('animationStoped');
+			transformAnimateButtonStateToStart();
+			setStartButtonEvent();
+		}
+	}
+
+	function transformAnimateButtonStateToStart (){
+		var button = getPauseButton();
 		button.innerText = "Start!";
 		button.id = "start";
-	},
-	"transformAnimateButtonStateToPause" : function(){
-		var button = this.getStartButton();
+	}
+
+	function transformAnimateButtonStateToPause (){
+		var button = getStartButton();
 		button.innerText = "Pause";
 		button.id = "pause";
-	},
-	"setProgressBarPercentage" : function(percents){
-		this.getProgressBar().style.width = percents+"%";
-	},
-	"hideTextContainer": function(){
-		this.getTextContainer().style.visibility = 'visible';
-	},
-	"clearTextContainer" : function(){
-		this.getTextContainer().innerText = '';
-	},
-	"setTextContainerLeftPosition" : function(position){
-		this.getTextContainer().style.left = position + "px";
-	},
-	"showTextContainer" : function(){
-		this.getTextContainer().style.visibility='visible';
-	},
-	"showStartButton" : function(){
-		this.getStartButton().style.visibility = 'visible';
-	},
-	"setSpeedButtonState" : function(speed_button, state){
-		this.deactivateActiveButton();
+	}
+
+	function setProgressBarPercentage (percents){
+		getProgressBar().style.width = percents+"%";
+	}
+
+	function hideTextContainer (){
+		getTextContainer().style.visibility = 'visible';
+	}
+
+	function clearTextContainer (){
+		getTextContainer().innerText = '';
+	}
+
+	function setTextContainerLeftPosition (position){
+		getTextContainer().style.left = position + "px";
+	}
+
+	function showTextContainer (){
+		getTextContainer().style.visibility='visible';
+	}
+
+	function showStartButton (){
+		getStartButton().style.visibility = 'visible';
+	}
+
+	function setSpeedButtonState (speed_button, state){
+		deactivateActiveButton();
 		speed_button.className = speed_button.className + " " + state;
-	},
-	"setSpeedButtonsEvent" : function(handler){
+	}
+
+	function setSpeedButtonsEvent (){
 		var nodes = document.getElementsByClassName("btn-group")[0].children;
 		for(var i = 0; i < nodes.length; i++){
-			nodes[i].onclick = handler;
+			nodes[i].onclick = function(){
+				app.trigger('animationSpeedChange', e.target.value);
+			};
 		}
-	},
-	"deactivateActiveButton" : function(){
+	}
+
+	function deactivateActiveButton (){
 		var active_button = document.getElementsByClassName("active")[0];
 		var classes = active_button.className.split(" ");
 		active_button.className = classes[0]+" "+classes[1];
-	},
-	"updateProgressBar" : function(iterator, data_length){
+	}
+
+	function updateProgressBar (iterator){
 		if (iterator !== 0){
-			var step = 100/data_length;
-			this.setProgressBarPercentage((iterator+1) * step);
+			setProgressBarPercentage((iterator+1) * step);
 		}
 		else{
-			this.setProgressBarPercentage(0);			
+			setProgressBarPercentage(0);			
 		}
-	},
-	"showWord" : function(element, progress, animation_end_cb){
-		if (progress < this.fields.progress_length){
-			this.getTextContainer().innerHTML = this.generateHighlightedWord(element.letterToHighlight, element.word);
-			this.indentWord();
-			this.showTextContainer();
-			this.updateProgressBar(progress, this.fields.progress_length);
-		}
-		else{
-			this.clearTextContainer();
-			this.updateProgressBar(0);
-			this.transformAnimateButtonStateToStart();
-			animation_end_cb();
-		}
-	},
-	"indentWord" : function(){
-		var position = this.getSmallbBarLength() - (this.getHighlightedLetterLeftOffset()+(this.getHighlightedLetterWidth()/2)-3);
-		this.setTextContainerLeftPosition(position);
-	},
-	"generateHighlightedWord" : function (highlightPosition, string){	
+	}
+
+	function indentWord (){
+		var position = getSmallbBarLength() - (getHighlightedLetterLeftOffset()+(getHighlightedLetterWidth()/2)-3);
+		setTextContainerLeftPosition(position);
+	}
+
+	function generateHighlightedWord  (highlightPosition, string){	
 		var processedWord = "";	
 		for (var i = 0; i < string.length; i++) {
 			var cssClass = "";
@@ -114,6 +152,4 @@ ui = {
 		}
 		return processedWord;
 	}
-};
-
-module.exports = ui;
+})();
