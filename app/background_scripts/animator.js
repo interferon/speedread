@@ -16,19 +16,15 @@ module.exports = (function() {
 		"500" : 90	
 	};
 
-	function clalculateDelay(has_punctuation, long_word){
-		var delay = delay;
+	function calculateDelay(has_punctuation, long_word){
+		var _delay = delay;
 		if (has_punctuation || long_word){
-			delay = delay + speed_delay_map[wpm];
+			_delay = _delay + speed_delay_map[wpm];
 		};
 		if (long_word && has_punctuation) {
-			delay = delay + speed_delay_map[wpm] + long_word_delay;
+			_delay = _delay + speed_delay_map[wpm] + long_word_delay;
 		};
-		return delay;
-	}
-	function setAnimationSpeed(wpm){
-		delay = (60/wpm)*1000;
-		wpm = wpm;
+		return _delay;
 	}
 
 	var publicMethods = {
@@ -36,6 +32,10 @@ module.exports = (function() {
 			display = function(data){
 				app.trigger('wordProvided', data);
 			}
+		},
+		"setAnimationSpeed" : function (wpm){
+			delay = (60/wpm)*1000;
+			wpm = wpm;
 		},
 		"bindConvertedText" : function(text){
 			convertedElements = text;
@@ -57,10 +57,10 @@ module.exports = (function() {
 				display({'element' : cE, 'progress' : reading_progress_counter});
 				var animate = function(){
 					publicMethods.start(convertedElements);
-				}.bind(this);	
+				}	
 				animation = setTimeout(
 					animate,
-					clalculateDelay(cE.punctuation_delay, cE.word.length > 12)
+					calculateDelay(cE.punctuation_delay, cE.word.length > 12)
 				);	
 			}		
 		}

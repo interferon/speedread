@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function(){
 		{'name' : 'ui', 'callback' : ui.setProgressBarLength}]);
 	app.bind('wordProvided', [ {'name' : 'ui', 'callback' : ui.showWord}]);
 	app.bind('animationStarted', [{'name' : 'animator', 'callback' : animator.start}]);
-	app.bind('animationStoped', [{'name' : 'animator', 'callback' : animator.stop}]);
+	app.bind('animationPaused', [{'name' : 'animator', 'callback' : animator.pause}]);
 	app.bind('animationSpeedChange', [{'name' : 'animator', 'callback' : animator.setAnimationSpeed}]);
 
 	textGetter.getUserSelectedText();

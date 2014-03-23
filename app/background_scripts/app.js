@@ -5,7 +5,7 @@ module.exports  = (function () {
 		'textConverted' : {},
 		'wordProvided' : {},
 		'animationStarted' : {},
-		'animationStoped' : {},
+		'animationPaused' : {},
 		'animationSpeedChange' : {}
 	}
 
@@ -38,9 +38,9 @@ module.exports  = (function () {
 				listener.callback();
 			}
 		},
-		'animationStoped' : function(){
-			for(var key in listeners.animationStoped){
-				var listener = listeners.animationStoped[key];
+		'animationPaused' : function(){
+			for(var key in listeners.animationPaused){
+				var listener = listeners.animationPaused[key];
 				listener.callback();
 			}
 		},

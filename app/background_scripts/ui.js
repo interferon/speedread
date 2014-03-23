@@ -64,7 +64,7 @@ module.exports = (function() {
 
 	function setPauseButtonEvent (){
 		getPauseButton().onclick = function(){
-			app.trigger('animationStoped');
+			app.trigger('animationPaused');
 			transformAnimateButtonStateToStart();
 			setStartButtonEvent();
 		}
@@ -114,8 +114,8 @@ module.exports = (function() {
 	function setSpeedButtonsEvent (){
 		var nodes = document.getElementsByClassName("btn-group")[0].children;
 		for(var i = 0; i < nodes.length; i++){
-			nodes[i].onclick = function(){
-				app.trigger('animationSpeedChange', e.target.value);
+			nodes[i].onclick = function(event){
+				app.trigger('animationSpeedChange', event.target.value);
 			};
 		}
 	}

@@ -17,19 +17,15 @@ module.exports = (function() {
 		"500" : 90	
 	};
 
-	function clalculateDelay(has_punctuation, long_word){
-		var delay = delay;
+	function calculateDelay(has_punctuation, long_word){
+		var _delay = delay;
 		if (has_punctuation || long_word){
-			delay = delay + speed_delay_map[wpm];
+			_delay = _delay + speed_delay_map[wpm];
 		};
 		if (long_word && has_punctuation) {
-			delay = delay + speed_delay_map[wpm] + long_word_delay;
+			_delay = _delay + speed_delay_map[wpm] + long_word_delay;
 		};
-		return delay;
-	}
-	function setAnimationSpeed(wpm){
-		delay = (60/wpm)*1000;
-		wpm = wpm;
+		return _delay;
 	}
 
 	var publicMethods = {
@@ -37,6 +33,10 @@ module.exports = (function() {
 			display = function(data){
 				app.trigger('wordProvided', data);
 			}
+		},
+		"setAnimationSpeed" : function (wpm){
+			delay = (60/wpm)*1000;
+			wpm = wpm;
 		},
 		"bindConvertedText" : function(text){
 			convertedElements = text;
@@ -58,10 +58,10 @@ module.exports = (function() {
 				display({'element' : cE, 'progress' : reading_progress_counter});
 				var animate = function(){
 					publicMethods.start(convertedElements);
-				}.bind(this);	
+				}	
 				animation = setTimeout(
 					animate,
-					clalculateDelay(cE.punctuation_delay, cE.word.length > 12)
+					calculateDelay(cE.punctuation_delay, cE.word.length > 12)
 				);	
 			}		
 		}
@@ -77,7 +77,7 @@ module.exports  = (function () {
 		'textConverted' : {},
 		'wordProvided' : {},
 		'animationStarted' : {},
-		'animationStoped' : {},
+		'animationPaused' : {},
 		'animationSpeedChange' : {}
 	}
 
@@ -110,9 +110,9 @@ module.exports  = (function () {
 				listener.callback();
 			}
 		},
-		'animationStoped' : function(){
-			for(var key in listeners.animationStoped){
-				var listener = listeners.animationStoped[key];
+		'animationPaused' : function(){
+			for(var key in listeners.animationPaused){
+				var listener = listeners.animationPaused[key];
 				listener.callback();
 			}
 		},
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function(){
 		{'name' : 'ui', 'callback' : ui.setProgressBarLength}]);
 	app.bind('wordProvided', [ {'name' : 'ui', 'callback' : ui.showWord}]);
 	app.bind('animationStarted', [{'name' : 'animator', 'callback' : animator.start}]);
-	app.bind('animationStoped', [{'name' : 'animator', 'callback' : animator.stop}]);
+	app.bind('animationPaused', [{'name' : 'animator', 'callback' : animator.pause}]);
 	app.bind('animationSpeedChange', [{'name' : 'animator', 'callback' : animator.setAnimationSpeed}]);
 
 	textGetter.getUserSelectedText();
@@ -340,7 +340,7 @@ module.exports = (function() {
 
 	function setPauseButtonEvent (){
 		getPauseButton().onclick = function(){
-			app.trigger('animationStoped');
+			app.trigger('animationPaused');
 			transformAnimateButtonStateToStart();
 			setStartButtonEvent();
 		}
@@ -390,8 +390,8 @@ module.exports = (function() {
 	function setSpeedButtonsEvent (){
 		var nodes = document.getElementsByClassName("btn-group")[0].children;
 		for(var i = 0; i < nodes.length; i++){
-			nodes[i].onclick = function(){
-				app.trigger('animationSpeedChange', e.target.value);
+			nodes[i].onclick = function(event){
+				app.trigger('animationSpeedChange', event.target.value);
 			};
 		}
 	}
