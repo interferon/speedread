@@ -65,7 +65,7 @@ module.exports  = (function () {
 			};
 			
 		},
-		'trigger' : function(event, data){
+		'notify' : function(event, data){
 			events[event](data);
 		},
 		'unbind' : function(event, listener_name){

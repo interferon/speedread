@@ -38,7 +38,7 @@ module.exports = (function() {
 		"stop" : function (){
 			clearTimeout(animation);
 			reading_progress_counter = 0;
-			mediator.trigger('animationFinished');
+			mediator.notify('animationFinished');
 		},
 		"pause" : function(){
 			clearTimeout(animation);
@@ -50,7 +50,7 @@ module.exports = (function() {
 			else{
 				var cE = convertedElements[reading_progress_counter];
 				reading_progress_counter++;
-				mediator.trigger('wordProvided', {'element' : cE, 'progress' : reading_progress_counter});
+				mediator.notify('wordProvided', {'element' : cE, 'progress' : reading_progress_counter});
 				var animate = function(){
 					publicMethods.start(convertedElements);
 				}	

@@ -57,7 +57,7 @@ module.exports = (function() {
 
 	function setStartButtonEvent (){
 		getStartButton().onclick = function(){
-			mediator.trigger('animationStarted');
+			mediator.notify('animationStarted');
 			transformAnimateButtonStateToPause();
 			setPauseButtonEvent();
 		}
@@ -65,7 +65,7 @@ module.exports = (function() {
 
 	function setPauseButtonEvent (){
 		getPauseButton().onclick = function(){
-			mediator.trigger('animationPaused');
+			mediator.notify('animationPaused');
 			transformAnimateButtonStateToStart();
 			setStartButtonEvent();
 		}
@@ -118,7 +118,7 @@ module.exports = (function() {
 			nodes[i].onclick = function(event){
 				deactivateActiveButton();
 				makeSelectedSpeedButtonActive(event.target);
-				mediator.trigger('animationSpeedChange', event.target.value);
+				mediator.notify('animationSpeedChange', event.target.value);
 			};
 		}
 	}

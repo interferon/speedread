@@ -57,7 +57,7 @@ module.exports = (function(){
 				});
 			}
 
-			mediator.trigger('textConverted', convertedText);					
+			mediator.notify('textConverted', convertedText);					
 		}
 	}
 
