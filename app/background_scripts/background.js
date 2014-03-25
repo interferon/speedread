@@ -39,7 +39,7 @@ module.exports = (function() {
 		"stop" : function (){
 			clearTimeout(animation);
 			reading_progress_counter = 0;
-			mediator.trigger('animationFinished');
+			mediator.notify('animationFinished');
 		},
 		"pause" : function(){
 			clearTimeout(animation);
@@ -51,7 +51,7 @@ module.exports = (function() {
 			else{
 				var cE = convertedElements[reading_progress_counter];
 				reading_progress_counter++;
-				mediator.trigger('wordProvided', {'element' : cE, 'progress' : reading_progress_counter});
+				mediator.notify('wordProvided', {'element' : cE, 'progress' : reading_progress_counter});
 				var animate = function(){
 					publicMethods.start(convertedElements);
 				}	
@@ -85,7 +85,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 	textGetter.getUserSelectedText();
 });
-
 },{"./animator.js":1,"./mediator.js":3,"./textGetter.js":4,"./text_processor.js":5,"./ui.js":6}],3:[function(require,module,exports){
 module.exports  = (function () {
 	
@@ -154,7 +153,7 @@ module.exports  = (function () {
 			};
 			
 		},
-		'trigger' : function(event, data){
+		'notify' : function(event, data){
 			events[event](data);
 		},
 		'unbind' : function(event, listener_name){
@@ -183,7 +182,7 @@ module.exports = (function(){
 						},
 						function(response) {
 							if (response.text.length > 10){
-								mediator.trigger('gotText', response.text);
+								mediator.notify('gotText', response.text);
 							}
 						}
 					);
@@ -252,7 +251,7 @@ module.exports = (function(){
 				});
 			}
 
-			mediator.trigger('textConverted', convertedText);					
+			mediator.notify('textConverted', convertedText);					
 		}
 	}
 
@@ -318,7 +317,7 @@ module.exports = (function() {
 
 	function setStartButtonEvent (){
 		getStartButton().onclick = function(){
-			mediator.trigger('animationStarted');
+			mediator.notify('animationStarted');
 			transformAnimateButtonStateToPause();
 			setPauseButtonEvent();
 		}
@@ -326,7 +325,7 @@ module.exports = (function() {
 
 	function setPauseButtonEvent (){
 		getPauseButton().onclick = function(){
-			mediator.trigger('animationPaused');
+			mediator.notify('animationPaused');
 			transformAnimateButtonStateToStart();
 			setStartButtonEvent();
 		}
@@ -379,7 +378,7 @@ module.exports = (function() {
 			nodes[i].onclick = function(event){
 				deactivateActiveButton();
 				makeSelectedSpeedButtonActive(event.target);
-				mediator.trigger('animationSpeedChange', event.target.value);
+				mediator.notify('animationSpeedChange', event.target.value);
 			};
 		}
 	}
