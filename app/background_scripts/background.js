@@ -74,90 +74,33 @@ document.addEventListener('DOMContentLoaded', function(){
 	var ui = require('./ui.js');
 	var text_processor = require('./text_processor.js');
 	
-	mediator.bind('gotText', [{'name' : 'text_processor', 'callback' : text_processor.convertText}]);
-	mediator.bind('textConverted', [{'name' : 'animator', 'callback' : animator.bindConvertedText },
-		{'name' : 'ui', 'callback' : ui.init}]);
-	mediator.bind('wordProvided', [ {'name' : 'ui', 'callback' : ui.showWord}]);
-	mediator.bind('animationStarted', [{'name' : 'animator', 'callback' : animator.start}]);
-	mediator.bind('animationPaused', [{'name' : 'animator', 'callback' : animator.pause}]);
-	mediator.bind('animationSpeedChange', [{'name' : 'animator', 'callback' : animator.setAnimationSpeed}]);
-	mediator.bind('animationFinished', [{'name' : 'ui', 'callback' : ui.end}])
+	mediator.bind('gotText', {'text_processor' : text_processor.convertText});
+	mediator.bind('textConverted', {'animator': animator.bindConvertedText, 'ui': ui.init});
+	mediator.bind('wordProvided', {'ui' : ui.showWord});
+	mediator.bind('animationStarted', {'animator': animator.start});
+	mediator.bind('animationPaused', {'animator': animator.pause});
+	mediator.bind('animationSpeedChange', {'animator' : animator.setAnimationSpeed});
+	mediator.bind('animationFinished', {'ui' : ui.end});
 
 	textGetter.getUserSelectedText();
 });
 },{"./animator.js":1,"./mediator.js":3,"./textGetter.js":4,"./text_processor.js":5,"./ui.js":6}],3:[function(require,module,exports){
 module.exports  = (function () {
 	
-	var listeners = {
-		'gotText' : {},
-		'textConverted' : {},
-		'wordProvided' : {},
-		'animationStarted' : {},
-		'animationPaused' : {},
-		'animationSpeedChange' : {},
-		'animationFinished' : {}
-	}
+	var events_module = {};
 
-	var events = {
-		'gotText' : function(data){
-			for(var key in listeners.gotText){
-				var listener = listeners.gotText[key];
-				listener.callback(data);
-			}
-		},
-		'textConverted' : function(data) {
-			for(var key in listeners.textConverted){
-				var listener = listeners.textConverted[key];
-				if (listener.name == 'ui')
-					listener.callback(data.length);
-				else
-					listener.callback(data);
-			}
-
-		},
-		'wordProvided' : function(data) {
-			for(var key in listeners.wordProvided){
-				var listener = listeners.wordProvided[key];
-				listener.callback(data);
-			}
-		},
-		'animationStarted' : function(){
-			for(var key in listeners.animationStarted){
-				var listener = listeners.animationStarted[key];
-				listener.callback();
-			}
-		},
-		'animationPaused' : function(){
-			for(var key in listeners.animationPaused){
-				var listener = listeners.animationPaused[key];
-				listener.callback();
-			}
-		},
-		'animationSpeedChange' : function(speed){
-			for(var key in listeners.animationSpeedChange){
-				var listener = listeners.animationSpeedChange[key];
-				listener.callback(speed);
-			}
-		},
-		'animationFinished' : function(){
-			for(var key in listeners.animationFinished){
-				var listener = listeners.animationFinished[key];
-				listener.callback();
-			}
-		}
-	}
 	return {
-		'bind' : function(event, listeners_arr){
-			for (var i = 0; i < listeners_arr.length; i++) {
-				listeners[event][listeners_arr[i].name] = listeners_arr[i];
-			};
-			
+		'bind' : function(event, listeners){
+			events_module[event] = listeners;
 		},
 		'notify' : function(event, data){
-			events[event](data);
+			console.log(event, data)
+			for (listeners in events_module[event]){
+				events_module[event][listeners](data);
+			}
 		},
 		'unbind' : function(event, listener_name){
-			delete listeners[event][listener_name];
+			delete events_module[event][listener_name];
 		}
 	}
 
@@ -269,8 +212,8 @@ module.exports = (function() {
 			showTextContainer();
 			updateProgressBar(data.progress);
 		},
-		"init": function (length){
-			step = 100/length;
+		"init": function (data){
+			step = 100/data.length;
 			showStartButton();
 			setStartButtonEvent();
 			setSpeedButtonsEvent();

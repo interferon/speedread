@@ -9,8 +9,8 @@ module.exports = (function() {
 			showTextContainer();
 			updateProgressBar(data.progress);
 		},
-		"init": function (length){
-			step = 100/length;
+		"init": function (data){
+			step = 100/data.length;
 			showStartButton();
 			setStartButtonEvent();
 			setSpeedButtonsEvent();
