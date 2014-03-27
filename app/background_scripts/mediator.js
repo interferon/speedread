@@ -7,9 +7,8 @@ module.exports  = (function () {
 			events_module[event] = listeners;
 		},
 		'notify' : function(event, data){
-			console.log(event, data)
-			for (listeners in events_module[event]){
-				events_module[event][listeners](data);
+			for (listener in events_module[event]){
+				events_module[event][listener](data);
 			}
 		},
 		'unbind' : function(event, listener_name){
