@@ -39,7 +39,7 @@ module.exports = (function() {
 		"stop" : function (){
 			clearTimeout(animation);
 			reading_progress_counter = 0;
-			mediator.notify('animationFinished');
+			mediator.notify('animator', 'animationFinished', null);
 		},
 		"pause" : function(){
 			clearTimeout(animation);
@@ -51,7 +51,7 @@ module.exports = (function() {
 			else{
 				var cE = convertedElements[reading_progress_counter];
 				reading_progress_counter++;
-				mediator.notify('wordProvided', {'element' : cE, 'progress' : reading_progress_counter});
+				mediator.notify('animator', 'wordProvided', {'element' : cE, 'progress' : reading_progress_counter});
 				var animate = function(){
 					publicMethods.start(convertedElements);
 				}	
@@ -74,36 +74,54 @@ document.addEventListener('DOMContentLoaded', function(){
 	var ui = require('./ui.js');
 	var text_processor = require('./text_processor.js');
 	
+
+	mediator.bind('app_opened', {'textGetter' : textGetter.getUserSelectedText});
 	mediator.bind('gotText', {'text_processor' : text_processor.convertText});
-	mediator.bind('textConverted', 
-		{'animator': animator.bindConvertedText, 'ui': ui.init}
-	);
+	mediator.bind('textConverted', {'animator': animator.bindConvertedText, 'ui': ui.init});
 	mediator.bind('wordProvided', {'ui' : ui.showWord});
 	mediator.bind('animationStarted', {'animator': animator.start});
 	mediator.bind('animationPaused', {'animator': animator.pause});
-	mediator.bind('animationSpeedChange', 
-		{'animator' : animator.setAnimationSpeed}
-	);
+	mediator.bind('animationSpeedChange', {'animator' : animator.setAnimationSpeed});
 	mediator.bind('animationFinished', {'ui' : ui.end});
-	mediator.bind('app_opened', {'textGetter' : textGetter.getUserSelectedText});
+	
 
-
-	mediator.notify('app_opened');
+	mediator.notify('index file','app_opened');
 });
 
 },{"./animator.js":1,"./mediator.js":3,"./textGetter.js":4,"./text_processor.js":5,"./ui.js":6}],3:[function(require,module,exports){
 module.exports  = (function () {
 	
-	var events_module = {};
+	window.events_module = {};
+
+	
+	var logger = {
+			log_event_success : function(event, listener){
+				console.log("Event **{"+event+"}** Fired on listener : **{"+listener+"}**");
+			}, 
+			log_event_fail: function(event){
+				console.log("Event "+event+" failed to fire due to missing listener(s)");
+			},
+			log_notification : function(source, event){
+				console.log("Module **{"+source+"}** trigger **{"+event+"}** event");
+			}
+
+		}
 
 	return {
 		'bind' : function(event, listeners){
 			events_module[event] = listeners;
 		},
-		'notify' : function(event, data){
-			for (listener in events_module[event]){
-				events_module[event][listener](data);
+		'notify' : function(source, event, data){
+			logger.log_notification(source, event);
+			if (events_module[event]){
+				for (listener in events_module[event]){
+					events_module[event][listener](data);
+					logger.log_event_success(event, listener);				
+				}
+			}else{
+				logger.log_event_fail(event);
 			}
+			
 		},
 		'unbind' : function(event, listener){
 			delete events_module[event][listener];
@@ -131,7 +149,7 @@ module.exports = (function(){
 						},
 						function(response) {
 							if (response.text.length > 10){
-								mediator.notify('gotText', response.text);
+								mediator.notify('textGetter', 'gotText', response.text);
 							}
 						}
 					);
@@ -173,6 +191,7 @@ module.exports = (function(){
 		}
 
 	return {
+
 		"convertText" : function (text){
 			prepared_text = prepareText(text);
 			var convertedText,
@@ -200,7 +219,7 @@ module.exports = (function(){
 				});
 			}
 
-			mediator.notify('textConverted', convertedText);					
+			mediator.notify('textProcessor', 'textConverted', convertedText);					
 		}
 	}
 
@@ -219,6 +238,7 @@ module.exports = (function() {
 			updateProgressBar(data.progress);
 		},
 		"init": function (data){
+
 			step = 100/data.length;
 			showStartButton();
 			setStartButtonEvent();
@@ -266,7 +286,7 @@ module.exports = (function() {
 
 	function setStartButtonEvent (){
 		getStartButton().onclick = function(){
-			mediator.notify('animationStarted');
+			mediator.notify('ui', 'animationStarted', null);
 			transformAnimateButtonStateToPause();
 			setPauseButtonEvent();
 		}
@@ -274,7 +294,7 @@ module.exports = (function() {
 
 	function setPauseButtonEvent (){
 		getPauseButton().onclick = function(){
-			mediator.notify('animationPaused');
+			mediator.notify('ui', 'animationPaused', null);
 			transformAnimateButtonStateToStart();
 			setStartButtonEvent();
 		}
@@ -327,7 +347,7 @@ module.exports = (function() {
 			nodes[i].onclick = function(event){
 				deactivateActiveButton();
 				makeSelectedSpeedButtonActive(event.target);
-				mediator.notify('animationSpeedChange', event.target.value);
+				mediator.notify('ui', 'animationSpeedChange', event.target.value);
 			};
 		}
 	}

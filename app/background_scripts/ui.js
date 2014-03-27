@@ -10,6 +10,7 @@ module.exports = (function() {
 			updateProgressBar(data.progress);
 		},
 		"init": function (data){
+
 			step = 100/data.length;
 			showStartButton();
 			setStartButtonEvent();
@@ -57,7 +58,7 @@ module.exports = (function() {
 
 	function setStartButtonEvent (){
 		getStartButton().onclick = function(){
-			mediator.notify('animationStarted');
+			mediator.notify('ui', 'animationStarted', null);
 			transformAnimateButtonStateToPause();
 			setPauseButtonEvent();
 		}
@@ -65,7 +66,7 @@ module.exports = (function() {
 
 	function setPauseButtonEvent (){
 		getPauseButton().onclick = function(){
-			mediator.notify('animationPaused');
+			mediator.notify('ui', 'animationPaused', null);
 			transformAnimateButtonStateToStart();
 			setStartButtonEvent();
 		}
@@ -118,7 +119,7 @@ module.exports = (function() {
 			nodes[i].onclick = function(event){
 				deactivateActiveButton();
 				makeSelectedSpeedButtonActive(event.target);
-				mediator.notify('animationSpeedChange', event.target.value);
+				mediator.notify('ui', 'animationSpeedChange', event.target.value);
 			};
 		}
 	}

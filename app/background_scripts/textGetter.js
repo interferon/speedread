@@ -15,7 +15,7 @@ module.exports = (function(){
 						},
 						function(response) {
 							if (response.text.length > 10){
-								mediator.notify('gotText', response.text);
+								mediator.notify('textGetter', 'gotText', response.text);
 							}
 						}
 					);

@@ -30,6 +30,7 @@ module.exports = (function(){
 		}
 
 	return {
+
 		"convertText" : function (text){
 			prepared_text = prepareText(text);
 			var convertedText,
@@ -57,7 +58,7 @@ module.exports = (function(){
 				});
 			}
 
-			mediator.notify('textConverted', convertedText);					
+			mediator.notify('textProcessor', 'textConverted', convertedText);					
 		}
 	}
 
