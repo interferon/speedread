@@ -11,8 +11,8 @@ module.exports  = (function () {
 				events_module[event][listener](data);
 			}
 		},
-		'unbind' : function(event, listener_name){
-			delete events_module[event][listener_name];
+		'unbind' : function(event, listener){
+			delete events_module[event][listener];
 		}
 	}
 
